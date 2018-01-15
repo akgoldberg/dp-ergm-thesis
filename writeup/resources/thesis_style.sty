@@ -1,0 +1,92 @@
+% input and image inclusion
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+
+% page formatting
+\usepackage[a4paper, top=1in, bottom=1in, left=1in, right=1in]{geometry}
+% line spacing
+\linespread{1.0}
+% paragraph spacing/indenting
+\setlength{\parskip}{\baselineskip} % space btw paragraphs
+\setlength{\parindent}{0pt} %  no paragraph indent
+% TOC spacing
+\usepackage{tocloft} 
+\setlength\cftparskip{1.0pt} 
+%\setlength\cftbeforechapskip{2.0pt}
+
+% Appendix
+%\usepackage[titletoc]{appendix}
+
+% Change chapter titles to have colons
+\usepackage{titlesec}
+\titleformat{\chapter}[hang] 
+{\normalfont\bfseries\LARGE}{\chaptertitlename\ \thechapter:}{1em}{}
+
+% headers
+% \usepackage{fancyhdr}
+% \pagestyle{fancy}
+
+% Math packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Bibliography packages
+\usepackage{csquotes}
+\usepackage[english]{babel}
+
+\usepackage[
+backend=biber,
+sortlocale=en_US,
+sorting=nyt,
+maxbibnames=8,
+%maxalphanames=4,
+style=ieee-alphabetic%alphabetic,firstinits
+]{biblatex}
+
+% Utility packages
+\usepackage{microtype, enumerate, multirow, booktabs, todonotes}
+
+% TikZ
+\usepackage{tikz}
+
+% Algorithms packages
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Theorems/definitions
+\usepackage{amsthm}
+
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}{Lemma}[chapter]
+\newtheorem{claim}{Claim}[section]
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{example}{Example}[chapter]
+\newtheorem{property}{Property}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+% Change equation/figure numbering by chapter
+\usepackage{chngcntr}
+\counterwithout{property}{chapter}
+\counterwithin{equation}{chapter}
+\counterwithin{figure}{chapter}
+
+% References
+\usepackage[hidelinks]{hyperref} 
+\usepackage{cleveref}
+
+
+
+%% Math Shortcuts %%
+\newcommand{\eps}{\epsilon}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\Lap}{\text{Lap}}
+\newcommand{\G}{\mathcal{G}}
+\renewcommand{\H}{\mathcal{H}}

@@ -1,0 +1,135 @@
+\section{Defining Differential Privacy over Graphs}
+
+In maintaining the privacy of individuals' data while analyzing a network, we employ the framework of differential privacy.  We let $\mathcal{D}$ denote the space of all possible datasets. Then:
+
+\begin{definition}
+\label{def:neighbors}
+ We say that two datasets $x, x' \in \mathcal{D}$ are \emph{neighbors} if 
+they differ in the record of one individual (we will discuss what it means for two graphs to be ``neighbors'' in Definitions \ref{def:edge_level} and \ref{def:node_level}). We denote that datasets $x$ and $x'$ are neighbors by $x \sim x'$.  
+\end{definition}
+
+\begin{definition}[$\eps$-differential privacy \cite{DMNS06}] Let $\A$ be an algorithm over datasets in $\mathcal{D}$. Then $\A$ is \emph{$\eps$-differentially private} if for all $S \subseteq \text{Range}(\A)$ and for every pair of neighboring datasets $x, x' \in \mathcal{D}$,
+	\begin{equation*}
+	\Pr[\A(x) \in S] \leq e^{\eps} \Pr[\A(x') \in S]
+	\end{equation*}
+\end{definition}
+
+Intuitively, differential privacy promises that the participation of any one individual in the dataset does not significantly change the outcome of a differentially private algorithm run on the dataset. 
+
+\subsection{Properties}
+
+One of the desirable properties of differential privacy is its immunity to \emph{post-processing} -- an analyst cannot process the output of an $\epsilon$-DP algorithm and make it less differentially private, without additional information about the private dataset. Immunity to post-processing will allow us to compute sufficient statistics of a statistical model in an $\eps$-DP manner and then consider inference using these statistics to be a post-processing step that does not further degrade privacy.
+\begin{property}[Post-processing \cite{DMNS06}]
+If $\A$ is an $\eps$-differentially private algorithm, then for any algorithm $f$, the composition of the functions $f \circ \A$ is also $\eps$-differentially private. 	
+\end{property}
+
+A second useful property of differential privacy is that multiple differentially private algorithms compose nicely. This allows us to use many DP algorithms as building blocks to more complicated algorithms, and in particular to split a privacy budget across multiple private computations on the data, permitting us, for instance, to compute various sufficient statistics of a probabilistic model separately. Specifically, the privacy loss incurred by running multiple DP algorithms on a dataset grows linearly:
+\begin{property}[Basic composition \cite{DMNS06}]
+Let $\A_i$ be an  $\eps_i$-differentially private algorithm for $i \in [k]$. Then, the algorithm releasing the result of running all $k$ algorithms on the dataset $\A_{[k]}(x) = (\A_1(x),...,A_k(x))$ is $(\sum_{i=1}^k \eps_i)$-DP.
+\end{property}
+
+\subsection{Mechanisms}
+
+A query on a dataset is a function mapping the dataset to a real number, $f: \mathcal{D} \to \mathbb{R}$.
+
+\begin{definition}[Local sensitivity]
+The \emph{local sensitivity} of a query $f$ on a dataset $x$ is $$LS_f(x) = \max_{x' \sim x} |f(D) - f(D')|$$
+\end{definition}
+
+\begin{definition}[Global sensitivity]
+The \emph{global sensitivity} of a query $f$ is $$GS_f = \max_{x \in \mathcal{D}} LS_f(x)$$
+\end{definition}
+
+\begin{theorem}[Laplace mechanism \cite{DMNS06}]
+	\label{thm:laplace}
+	Let $f$ be a query on dataset $x$ with global sensitivity $GS_f$ and let \emph{$\Lap$} denote the zero-mean Laplace distribution\footnote{The Laplace distribution centered at $0$ with scale parameter $b$ has probability density function $p(x | b) = \frac{1}{2b} e^{-|x|/b}$ and the variance of the distribution is $\sigma^2 = 2b^2$.}. Then, the Laplace mechanism $\A_{L}$ that outputs 
+	$$\A_L(x, f, \eps) = f(x) + \Lap\left(\frac{GS_f}{\eps}\right)$$
+	is $\eps$-differentially private.
+\end{theorem}
+
+\begin{theorem}[Exponential mechanism \cite{MT07}]
+	Let $u(x,r)$ be a utility function that maps database-outcome pair $(x,r)$ to a real-valued score. Then, the Exponential mechanism $\A_{E}$ that produces a random outcome with probability:
+	$$\Pr(\A_E(x, u, \epsilon) = r) \propto \exp \left(\frac{\eps u(x,r)}{2 GS_u} \right)$$
+	is $\epsilon$-differentially private. The global sensitivity of the utility function is the maximum change in the utility function on any fixed outcome over a pair of neighboring datasets:
+	$$GS_u = \max_{r, x' \sim x} |u(x,r) - u(x', r)|$$
+\end{theorem}
+
+\begin{theorem}[Randomized response \cite{War65},\cite{KKS17}]
+	Let $\mathcal{D} = \{0,1\}^n$ so $x \in \mathcal{D}$ consists of binary data. Then, randomized response flips each bit of $x$ with probability $p \in (0, \frac{1}{2})$ and releases the resulting noisy bits.\footnote{Note that a more general version of randomized response could in fact be used while collecting data (and indeed was initially proposed as such a survey method in the 60s) since a researcher could ask participants in a survey a question, and could flip a biased coin to decide whether to keep the true answer or not and if not, then flip a second coin to record.} This process provides $\eps$-differential privacy with $\eps= - \log \frac{p}{1-p}$.
+\end{theorem}
+
+\subsection{Neighboring Graphs}
+
+We now turn to the question of how to define two graphs as ``neighbors.'' There are two reasonable and widely used definitions, which provide privacy at very different granularities and thus may be appropriate in different circumstances, as we detail below: 
+
+\begin{definition}[Edge-level adjacency]
+\label{def:edge_level}
+We define two graphs $G_1 = (V_1, E_1)$ and $G_2 = (V_2, E_2)$ to be \emph{edge-adjacent} if they have the same vertex set ($V_1 = V_2$) and they differ in only one edge ($\left| E_1 \triangle E_2   \right| = 1$). 
+\end{definition}
+Edge-level differential privacy treats two graphs as adjacent if they differ in an individual edge, thereby protecting privacy of specific relationships between nodes. Thus, edge-level privacy could protect, for instance, an individual's Facebook friendship on Facebook with a controversial political leader. However, privacy at the edge-level could not guarantee protection from an adversary's discerning whether an individual has all Republican or Democratic friends on Facebook. Such concerns motivate a stronger definition of neighboring graphs:
+
+\begin{definition}[Node-level adjacency]
+\label{def:node_level}
+We define two graphs $G_1 = (V_1, E_1)$ and $G_2 = (V_2, E_2)$ to be \emph{node-adjacent} if $G_1-v_i = G_2-v_i$ for some vertex $v_i$, where we use $G-v_i$ to mean that we remove  all edges adjacent to node $v_i$. Thus, in the extreme case, one graphs may be obtained from the other by removing all edges incident to a single node. 
+\end{definition}
+
+Finally, we define the distance between two graphs as follows:
+
+\begin{definition}[Distance]
+\label{def:graph_distance}
+The \emph{distance} between two graphs $G_1$ and $G_2$, denoted $d(G_1, G_2)$ is the minimal length of the sequence of graphs beginning with $G_1$ and ending with $G_2$ such that every two consecutive graphs on the path are neighbors (with respect to either node-level  or edge-level adjacency). To go from $G_1$ to $G_2$ we will need to either add or remove every edge in the symmetric difference between the edge sets of $G_1$ and $G_2$ (all edges that are not the same in the two graphs.)  Thus, under edge-level adjacency, we step from $G_1$ to $G_2$ by each edge, so $d(G_1, G_2) = |E_1 \triangle E_2|$. Under node-level adjacency, we can change all edges adjacent to a node at once, so in order to go from one graph to another, we can step through each node that touches edges that differ between the graphs. Therefore, the distance between two graphs is given by the size of the vertex cover of the symmetric difference graph (the graph including the edges in $E_1 \triangle E_2$): $d(G_1, G_2) = |VC(G_1 \triangle G_2)|$. Note that, finding the vertex cover of an arbitrary graph is NP hard, so computing the distance between two graphs under node-adjacency is an NP-hard problem\cite{BBDS13}.
+\end{definition}
+
+\section{Restricted Sensitivity}
+\label{sec:restricted_sensitivity}
+
+Now, it is clear that node-level privacy constitutes a much stronger guarantee than edge-level privacy. However, it also much more difficult to perform accurate analysis under node-level privacy. For instance, the global sensitivity of the degree distribution of a graph to the addition under the edge-level definition is only $2$, because the degree of two nodes will change by $1$ due to the addition or removal of an edge, but under the node-level definition we could consider removing a node of degree $n-1$ which would affect $n$ entries, so naive application of the Laplace mechanism would completely destroy the counts of the degree distribution. 
+
+This example also illustrates, that over graphs where we use node-level adjacency, the global sensitivity and even local sensitivity may be very high. However, if we hypothesized that our class of graphs has limited degree $k << n$, then the sensitivity might be much lower over these limited-degree graphs. This assumption would be reasonable for many real world social networks where there may be many individuals in the network, but people have a bounded number of friends. For instance, Facebook has billions of users on it, but an explicit restriction that users may not have more than 5,000 friends.
+
+Motivated by the desire to perform accurate differential private analysis on potentially high-sensitivity graph statistics Blocki et al. \cite{BBDS13} propose the notion of \emph{restricted sensitivity}, where we use a hypothesis (such as the limited degree hypothesis above) to restrict the sensitivity of a query over the graph. The hypothesis $\H$ is a subset of all possible graphs and the hypothesis is true if the true graph is in this subset. 
+
+At a high level, if we project graphs into $\H$ and then calibrate added noise to the ``restricted sensitivity'' of graphs within this subset, then we can guarantee differential privacy. Further, if the hypothesis was true for our graph, then the projection did not alter the graph at all, so we preserve accuracy (up to the distortion of the noise-adding procedure). Note, however, that for graphs for which the hypothesis is false, we may not be able to make any accuracy guarantees, as this depends on how the projection into $\H$ alters the graph. 
+
+Denoting the space of all graphs $\G$, we define restricted sensitivity as follows:
+
+\begin{definition}[Restricted sensitivity \cite{BBDS13}]
+\label{def:restricted-sensitivity}
+For a given notion of adjacency (either edge or node), we define the \emph{restricted sensitivity} of query $f$ over hypothesis $\H \in \G$ as
+$$RS_f(\H) = \max_{G_1, G_2 \in \H} \frac{|f(G_1) - f(G_2)|}{d(G_1, G_2)}$$
+\end{definition}
+
+Note that the restricted sensitivity is defined over all graphs in $\H$, not just neighbors, since a projection of a graph and its neighbor to the hypothesis subset may not result in the two graphs being adjacent. However, if we use the hypothesis $\H_k$, that our class of graphs has a limited degree, formally $\H_k = \{G = (V, E) \in \G : deg(v) \leq k, \forall v \in V \}$, then, we can bound the restricted sensitivity by finding the global sensitivity restricted to adjacent graphs in $\H_k$:
+
+\begin{lemma}[Restricted sensitivity for $\H_k$]
+	\label{lemma:RS-Hk}
+	For the limited degree hypothesis we can bound restricted sensitivity by: 
+$$RS_f(\H_k)  \leq \max_{G_1, G_2 \in \H_k: G_1 \sim G_2} |f(G_1 - f(G_2)|$$
+\end{lemma}
+\begin{proof}
+	Note that if the distance between two $k$-degree graphs (in either the node or edge adjacency formulation) is $m$, then there must be a sequence of adjacent graphs all in $\H_k$ of length $m$ starting with the first graph and ending with the second graph. This holds by always removing edges in the sequence (either on an individual level for edge-adjacency or at the node level for node-adjacency) before adding edges.\footnote{Note that for an arbitrary hypothesis $\H$, however, the distance between two graphs in $\H$ may be realized only by a sequence that include graphs not in $\H$, which is why we give the general definition of restricted sensitivity as in \Cref{def:restricted-sensitivity}.} 
+	
+	Now, consider two graphs $G_0, G_m \in \H_k$ with $d(G_0, G_m) = m$ and let $G_i \in \H_k, i \in [m]$ be a sequence of adjacent graphs ($G_i \sim G_{i+1}$) beginning with $G_0$ and ending with $G_m$. Then, we have (applying the triangle inequality) that:
+	\begin{align*}
+	RS_f(\H) = \max_{G_0, G_m \in \H_k} \frac{|f(G_0) - f(G_m)|}{d(G_0, G_m)} & = \max_{G_0, G_m \in \H_k} \frac{| \sum_{i = 0}^{m-1}f(G_i) - f(G_{i+1})|}{m} \\
+	& \leq \max_{G_0, G_m \in \H_k}  \frac{\sum_{i = 0}^{m-1}|f(G_i) - f(G_{i+1})|}{m} \\
+	& \leq \max_{G, G' \in \H_k: G \sim G'} |f(G) - f(G')|
+	\end{align*}
+\end{proof}
+
+In many cases, the difference between neighboring graphs in $\H_k$ given in \Cref{lemma:RS-Hk} will be much easier to bound than the general formulation of restricted sensitivity given in \cref{def:restricted-sensitivity} over $\H_k$.
+
+Now, to achieve differential privacy while calibrating noise to restricted sensitivity rather than global sensitivity, we will use a smooth projection $\mu: \G \to \H$ to project a graph $G$ into $\H$ (so $\mu(G) = G$ if $G \in \H$) and then apply a differentially private algorithm adding noise proportional to the restricted sensitivity. We want this projection to be smooth so that two adjacent graphs are still close to each other in distance after being projected to $\H$. We define a smooth projection as:
+
+\begin{definition}[$c$-smooth projection \cite{BBDS13}]
+A projection $\mu: \G \to \H$ is a $c$-smooth projection if for any pair of neighboring graphs $G \sim G'$, $d(\mu(G)), \mu(G') \leq c$. 
+\end{definition}
+
+\begin{theorem}[]
+\label{thm:restricted_sensitivity_mechanism}
+Let $\mu: \G \to \H$ be a $c$-smooth projection. For a query $f$, define $f_\H = f \circ \mu$ to be the query applied to the projection. Then $GS_{f_\H} \leq c \cdot RS_f(\H)$.
+\end{theorem}
+
+In particular, this means that if we can find a $c$-smooth projection for a given hypothesis $\H$, then we can use $\eps$-differentially private mechanisms that add noise proportional to $c \cdot RS_f(\H)$.
+
+For $\H_k$, Blocki et al. give an efficient $3$-smooth projection to $\H_k$ in the edge-adjacency model and a projection for the node-adjacency model along with a $4$-smooth estimator of the distance between graphs, which allows for $(\epsilon, \delta)$-privacy in the node-adjacency model. Thus, using $\H_k$ as our hypothesis, we will be able to add noise proportional to the restricted sensitivity over $\H_k$ of the statistics that we wish to compute. Therefore, our primary focus in proving privacy will be bounding the restricted sensitivity of the queries of interest over $\H_k$. 

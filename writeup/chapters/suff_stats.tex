@@ -1,0 +1,92 @@
+In this section, we propose methods for releasing differentially private alternating sufficient statistics of the ERGM defined in \Cref{sec:alt_stats}. In particular, we take advantage of methods using restricted sensitivity (see \Cref{sec:restricted_sensitivity}) where we have hypothesis $\H_k$ that the network has degree limited to $k$. This seems like a reasonable assumption for two reasons. First, experimental results on ERGMs with the alternating statistics have demonstrated that for reasonable parameter values, the distribution tends to put low probability mass on very high-degree graphs \cite{Sni+06}. Thus, given that we assume that an observed network is roughly drawn from the probability distribution specified by an ERGM, we believe with high probability that the graph has relatively low degree. Second, many real-world social networks that are relevant to study have bounded degree, although this may vary based on the specific network dataset. 
+
+Below, we characterize the restricted sensitivity of the alternating sufficient statistics of an ERGM under edge level privacy and node level privacy respectively. For reference, the ``weighting parameters'' of the alternating statistics $\gamma$ and $\lambda$ are generally set to be small constants between roughly $1$ and $5$ (most empirical work seems to find that values between $1$ and $2$ in fact suffice).
+
+\section{Edge Level Privacy} 
+
+For the alternating $k$-star statistic under edge-level privacy, restricted sensitivity does not
+give any advantage over using global sensitivity, as the global sensitivity of this statistic is quite low:
+
+\begin{claim}[Global sensitivity of alternating $k$-star under edge-level privacy]
+The global sensitivity of the alternating $k$-star statistic is less than $2\lambda$. 
+\end{claim}
+\begin{proof}
+We use the alternative formulation of the statistic given in \Cref{eq:alternative-k-star}:
+$$u_\lambda^{(s)}(x) =  \lambda^2 \sum_{i = 0}^{n-1} \left(\frac{\lambda - 1}{\lambda}\right)^i D_i + 2 \lambda |E| - n \lambda^2$$
+Then, consider adjacent graphs $x, x'$ differing in one edge where $x$ has the additional edge. Then, the first term of the alternating $k$-statistic is larger for $x'$ than for $x$ and by at most $2\lambda$ and at least $0$, while the second term is larger for $x$ than for $x'$ by $2\lambda$. Hence, the difference between the alternating $k$-star statistic computed on $x$ and $x'$ is at most $|2\lambda - 0| = 2\lambda$ and appealing to the bound on restricted sensitivity from \Cref{lemma:RS-Hk}, we have that $RS_{u_\gamma^{(t)}} (\H_k) \leq 2\lambda$.
+\end{proof}
+
+Note that we could also compute the $k$-star statistic by computing the degree distribution of the graph in a differentially private manner, which can be done with high accuracy using the Laplace mechanism and clever post-processing (see \cite{HLMJ09}), and then using the degrees for the alternating-$k$-star statistic. However, adding noise proportional to global sensitivity of $2\lambda$ should give good accuracy, as the alternating $k$-star statistic is roughly on the order of $2\lambda|E|$.
+
+\begin{claim}[Restricted sensitivity of alternating $k$-triangle under edge-level privacy]
+The restricted sensitivity of the alternating $k$-triangle statistic under $\H_k$ is less than $2(k-1) + \gamma$.
+\end{claim}
+\begin{proof}
+Consider two adjacent graphs $x, x'\in \H_k$ differing in exactly one edge, so that $x_{ij} = 1$ and $x'_{ij} = 0$. Now, note that for nodes $i$ and $j$, the number of shared partners is the same in $x$ and $x'$ since all edges are the same except for the edge between $i$ and $j$. Then, let $P_{ij} = P'_{ij} = m \leq k-1$ by the limited degree hypothesis. Note that there are $2m$ edges for which $P'_{e} = P_{e} - 1$, since there are two other edges in each triangle. Then, recalling the definition of the alternating $k$-triangle statistic in terms of the shared partners of $i$ and $j$ given in \Cref{eq:alternative-k-tri}:
+$$
+u_\gamma^{(t)}(x) = \gamma |E| - \gamma \sum_{1 \leq i < j \leq n} x_{ij} \left(\frac{\gamma-1}{\gamma} \right)^{P_{ij}}
+$$
+we have that 
+\begin{align*}
+|u_\gamma^{(t)}(x) - u_\gamma^{(t)}(x')| &= \left|\gamma - \gamma \left(\frac{\gamma-1}{\gamma} \right)^{m}  + \gamma\sum_{e= 1}^{2m}  \left[\left(\frac{\gamma-1}{\gamma} \right)^{P_e-1}  - \left(\frac{\gamma-1}{\gamma} \right)^{P_e}\right]    \right|\\
+& = \left|\gamma - \gamma \left(\frac{\gamma-1}{\gamma} \right)^{m}  + \sum_{e= 1}^{2m}  \left(\frac{\gamma-1}{\gamma} \right)^{P_e-1}   \right|\\
+& \leq 2m + \gamma\\ 
+& \leq 2(k-1) + \gamma 
+\end{align*}
+
+and again appealing to the bound on restricted sensitivity from \Cref{lemma:RS-Hk}, we have that $RS_{u_\gamma^{(t)}}(\H_k) \leq 2(k-1) + \gamma$.
+\end{proof}
+
+Note the usefulness of restricted sensitivity here, in contrast to global sensitivity. The global sensitivity of this statistic is $O(n)$, since there could conceivably be a graph with an $(n-1)$-triangle where removing the base of the triangle could lead to a very large change in the statistic, since it would lead to the removal of $n$ triangles of which it was not the only base. However, if we restrict degrees, we can potentially add much less noise.
+
+\begin{claim}[Restricted sensitivity of alternating $k$-two-path under edge-level privacy]
+The restricted sensitivity of the alternating $k$-two-path statistic under $\H_k$ is less than $2(k-1)$.
+\end{claim}
+\begin{proof}
+The proof will proceed in roughly the same way as for $k$-triangles. Define $x$ and $x'$ in the same way and recall the definition of the alternating $k$-two-path statistic in terms of shared partners as given in \Cref{eq:alternative-k-two-path}:
+$$
+u_\gamma^{(p)}(x) = \gamma \binom{n}{2} - \gamma \sum_{1 \leq i < j \leq n} \left(\frac{\gamma-1}{\gamma} \right)^{P_{ij}}
+$$
+Then, the change between the statistic on $x$ and $x'$ is equal to 
+$$|u_\gamma^{(p)}(x) -  u_\gamma^{(p)}(x')| = \sum_{e = 1}^{2m} \left( \frac{\gamma - 1}{\gamma} \right)^{P_e - 1} \leq 2m \leq 2(k-1)$$
+\end{proof}
+
+\section{Node Level Privacy}
+
+\begin{claim}[Restricted sensitivity of alternating $k$-star under node-level privacy]
+The restricted sensitivity with hypothesis $\H_k$ of alternating $k$-star under node-level differential privacy is less than $3\lambda k$.
+\end{claim}
+\begin{proof}
+We will again use the formulation of the alternating $k$-star statistic in terms of degree distribution from \Cref{eq:alternative-k-star}. Now, consider two graphs $x, x' \in \H_k$ differing in one node $i$ of degree $m \leq k$, with all of its incident edges removed in $x'$. Then, the degree of node $i$ is $m$ in $x$ and $0$ in $x'$, while the degrees of $m$ other nodes are $1$ lower in $x'$ than in $x$, so:
+\begin{align*}
+|u_\lambda^{(s)}(x) - u_\lambda^{(s)}(x')| & = \left|2\lambda m + \lambda^2\left( \left(\frac{\lambda - 1}{\lambda}\right)^m - 1\right) +\sum_{j: x_{ij} = 1} \lambda \left(\frac{\lambda - 1}{\lambda}\right)^{d_j - 1}  \right| \\
+& \leq \left|3\lambda m +  \lambda^2\left( \left(\frac{\lambda - 1}{\lambda}\right)^m - 1\right)\right|
+\end{align*}
+and note that $0 \leq \left(\frac{\lambda - 1}{\lambda}\right)^m \leq 1$ and that $|\lambda^2| \leq 3\lambda m$ for reasonable choices of $k$ and $\lambda$ (since generally we choose $1 < \lambda < 5$, so in order to have the $\lambda^2$ term dominate the $3\lambda k$ term we would have to restrict $k$ to $1$, which would not be interesting or realistic, so the sensitivity is bounded by $3\lambda k$.
+\end{proof}
+
+\begin{claim}[Restricted sensitivity of alternating $k$-triangle under node-level privacy]
+The restricted sensitivity with hypothesis $\H_k$ of the alternating $k$-triangle statistic under node-level differential privacy is less than $k^2 + (\gamma - 1) k$.
+\end{claim}
+\begin{proof}
+Consider two adjacent graphs $x, x'\in \H_k$ differing in one node $i$ of degree $m$. Now, since each of the $m$ edges incident to node $i$ is removed this changes $m$ edges $x_{ij} = 1$ to $x'_{ij} = 0$, so $E(x) - E(x') = m$ and for each of these $m$ edges 
+$$ x_{ij} \left( \frac{\gamma - 1}{\gamma}\right)^{P_{ij}} - x'_{ij} \left( \frac{\gamma - 1}{\gamma}\right)^{P'_{ij}} = \left( \frac{\gamma - 1}{\gamma}\right)^{P_{ij}} $$ so the direct effect of removing the $x_{ij}$ is that $u_\gamma^{(t)}(x') - u_\gamma^{(t)}(x') \leq m \gamma -0$ (ignoring the effect on the shared partners of edges not adjacent to $i$.)
+
+Now, we consider edges $e$ such that the endpoints of $e$ have $i$ as a shared partner. Note that there are $\binom{m}{2} = m^2 - m$ such edges, because we can choose any $2$ edges of $i$ and the endpoints of these edges have $i$ as a shared partner. Now, each of these edges still exists in $x'_{ij}$ but has its number of shared partners decrease by $1$. Then, we have 
+\begin{align*}
+|u_\gamma^{(t)}(x) - u_\gamma^{(t)}(x')| &= \left|\gamma m - \gamma \sum_{j: x_{ij} = 1}\left(\frac{\gamma-1}{\gamma} \right)^{P_{ij}}  + \sum_{e= 1}^{m^2 - m}  \left(\frac{\gamma-1}{\gamma} \right)^{P_e-1}    \right|\\
+& \leq |\gamma m + (m^2 - m)|\\
+& \leq k^2 +  (\gamma - 1)k 
+\end{align*}
+\end{proof}
+
+\begin{claim}[Restricted sensitivity of alternating $k$-two-path under node-level privacy]
+The restricted sensitivity with hypothesis $\H_k$ of the alternating $k$-two-path statistic under node-level differential privacy is less than $k^2$. 
+\end{claim}
+\begin{proof}
+As for $k$-triangles, consider two adjacent graphs $x, x' \in \H_k$ differing in node $i$ of degree $m$. Then, the removal of these $m$ edges impacts the shared partners of $m^2$ edges, the $m$ incident to $i$ and the $\binom{m}{2} = m^2 - m$ that have $i$ as a shared partner and the decrease in shared partners for each of these edges can change the statistic by at most $1$ so the overall change is at most $m^2 \leq k^2$.
+\end{proof}
+
+\section{Using the Noisy Statistics}
+
+Now, by projecting our graph into $\H_k$ using the projections of Blocki et al. \cite{BBDS13} and then applying the Laplace mechanism (\ref{thm:laplace}), we can release the sufficient statistics of the ERGM in a differentially private manner by calibrating the noise of the Laplace mechanism to the restricted sensitivity by \ref{thm:restricted_sensitivity_mechanism}. In theory, we could now release these sufficient statistics to analysts who wish to study the network, since the likelihood of the ERGM depends on the data only through the sufficient statistics. However, using these noisy statistics directly for standard inference techniques may lead to poor accuracy. It may be an interesting research question in itself how adding noise to the sufficient statistics of the model degrades inference, although the hope is to perform inference in such a way as to take into account the noise-adding procedure, which has worked well for MCMC techniques akin to those used for inference on ERGMs (for instance, in \cite{LM14}, \cite{FGWC16}). Because the convergence properties and accuracy of non-private inference methods for inference over ERGMs are primarily understood from an experimental standpoint, we propose experimental evaluation of methods for inference over private sufficient statistics.

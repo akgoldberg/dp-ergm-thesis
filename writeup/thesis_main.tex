@@ -1,0 +1,102 @@
+\documentclass[12pt]{report}
+
+\usepackage{resources/thesis_style}
+
+% Add bibliography
+\addbibresource{resources/thesis_bib.bib}
+
+% Title page
+\title{
+	{Senior Thesis Writeup}\\
+	%{\large Harvard University}\\
+}
+\author{Alexander Goldberg}
+\date{}
+
+\begin{document}
+	
+	\maketitle 
+	
+	\begin{abstract}
+		This is my abstract.
+	\end{abstract}
+	
+	\tableofcontents
+	%\listoffigures
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 												Introduction													 %
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\chapter{Introduction}\label{ch:intro}
+	\input{chapters/introduction}
+	
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 												Network Models												%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\chapter[Statistical Modeling of Network Data]{Statistical Modeling of\\ Network Data}
+	\label{ch:network_modeling}
+	
+	\input{chapters/network_models}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 												Privacy													 			%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\chapter{Differential Privacy over Graphs}\label{ch:dp_defns}
+	
+	\input{chapters/privacy}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 												Related Work													%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\chapter[Related Work on Differential Privacy and ERGMs]{Related Work on Differential\\ Privacy and ERGMs}\label{ch:related_work}
+	
+	\input{chapters/related_work}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 								Private Sufficient Statistics											   %
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\chapter{Differentially Private Sufficient Statistics of ERGMs}\label{ch:dp_stats}
+	
+	\input{chapters/suff_stats}
+	
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 													Inference											          %
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\chapter{Inference}\label{inference}
+	
+	\input{chapters/inference}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 													Conclusion											         %
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\chapter{Conclusion}\label{conclusion}
+	
+	%\input{chapters/inference}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 												Bibliography													 %
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% include bibliography in TOC
+	\cleardoublepage
+	\phantomsection
+	\addcontentsline{toc}{chapter}{Bibliography}
+	
+	\nocite{*}
+	\printbibliography	
+	
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 													Appendix									                 %
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%\begin{appendices}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% 									Smooth Projections to $\H_k$									%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		\appendix
+		\chapter{Smooth Projections to $\H_k$}\label{appendix_projections}
+		The contents...
+	
+	%\end{appendices}
+\end{document}
