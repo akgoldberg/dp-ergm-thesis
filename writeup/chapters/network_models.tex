@@ -85,7 +85,7 @@ In response to the problems of degeneracy with Markov graphs, more robust suffic
 \begin{figure}[!ht]
 	\label{fig:graphdiagram}
 	\centering
-	\input{images/graph_diagram}
+	\input{figures/graph_diagram}
 	\caption{Subgraphs used in sufficient statistics of ERGMs.}
 \end{figure}
 
@@ -201,19 +201,20 @@ While it can be of interest to consider the properties of ERGMs based on their p
 
 \subsection{Sampling Graphs}
 
+\todo[inline]{Write out Metropolis Hastings, (Gibbs?) samplers and motivate them and then describe and motivate Bayesian inference}
+
 \begin{algorithm}
 	\caption{Metropolis-Hastings Sampler for ERGMs}
 	Input: parameter vector $\theta$, initial graph $x^{(0)}$, number of iterations $T$ \\
-	Output: sequence of graphs $x^{(1)},...x^{(T-1)},x^{(T)}$
+	Output: sequence of graphs $x^{(1)},...x^{(T-1)},x^{(T)}$ such that $x^{(T)} \sim p(X | \theta)$ as $T \to \infty$
 	
-	\begin{algorithmic}[1]
-		\For{$ t = 1,...,T$}
-		\State Select nodes $i$ and $j$ at random
-		\State Propose graph $x^*$ which is the same as $x^{(t-1)}$ except that we ``toggle'' the edge between $i$ and $j$ so $x^*_{ij} = 1 - x^{(t-1)}_{ij}$.
-		\State Accept the proposed move with probability $\min\left\{1, \frac{p(x^* | \theta)}{p(x^{(t-1)} | \theta)} \right\}$
-		\State If the move is accepted set $x^{(t)} = x^*$. Otherwise, set $x^{(t)} = x^{(t-1)}$.
-		\EndFor
-	\end{algorithmic}
+	\vspace{0.1in}
+		For {$ t = 1,...,T$}:
+		\begin{enumerate}
+			\item  Select nodes $i$ and $j$ at random
+			\item Propose graph $x^*$ which is the same as $x^{(t-1)}$ except that we ``toggle'' the edge between $i$ and $j$ so $x^*_{ij} = 1 - x^{(t-1)}_{ij}$
+			\item Accept the proposed move with probability $\min\left\{1, \frac{p(x^* | \theta)}{p(x^{(t-1)} | \theta)} \right\}$. If the move is accepted set $x^{(t)} = x^*$. Otherwise, set $x^{(t)} = x^{(t-1)}$
+		\end{enumerate}
 \end{algorithm}
 
 \subsection{Estimation of Parameters}
