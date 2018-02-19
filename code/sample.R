@@ -114,9 +114,31 @@ test.noise.sample <- function(nws.sample, dp.epsilon, dp.delta, dp.k) {
     terms <-list(c(list("name" = c("gwdsp"), "inputs" = c(0.5))))
     ktwop.noise.restr <- draw.lap.noise.restricted(terms, dp.epsilon, dp.k, "edge")
     ktwop.noise.level <- list("smooth" = mean(get.levels(ktwop.noise.smooth)), "restricted" = ktwop.noise.restr$level)
-
+    
     return(list("ktri" = ktri.noise.level, "ktwop" = ktwop.noise.level))
 }
+
+dist.noise.samples <- function(nws.samples, dp.epsilon, dp.delta) {
+  out <- data.frame()
+  for (nws.sample in nws.samples) {
+    dp.k <- max(nws.sample$deg) + 1
+    new <- test.noise.sample(nws.sample, dp.epsilon, dp.delta, dp.k)
+    new$n <- nws.sample$n
+    new$altktri <- mean(nws.sample$altktri)
+    new$altktwopath <- mean(nws.sample$altktwopath)
+    new$dp.k <- dp.k
+    out <- rbind(out, data.frame(rbind(unlist(new))))
+  }
+  rownames(out) <- out$n
+  out$n <- NULL
+  return(out)
+}
+
+
+
+################################################################################
+##                                Generate/Load Samples                       ##
+################################################################################
 
 # generate samples from n = start to 1000
 generate.samples <- function(samp.id, start=100) {
