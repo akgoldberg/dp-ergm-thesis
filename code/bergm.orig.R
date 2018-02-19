@@ -42,7 +42,7 @@ bergm.orig <- function (formula,
     tot.iters <- burn.in + main.iters
 
     for (k in 1L:tot.iters) {
-        if (k%%print.out == 0)  print(sprintf("Completed %d iterations. Theta = [%s]", k, paste(round(theta, 3), collapse=",")))
+        if (k%%print.out == 0)  print(sprintf("Completed %d iterations. Thetas = %s", k, theta.to.str(theta)))
         for (h in 1L:nchains) {
             if (Clist$nstats > 1 && nchains > 1) {
                 snooker <- gamma * apply(theta[, sample(seq(1, nchains)[-h], 2)], 1, diff)
@@ -83,4 +83,9 @@ bergm.orig <- function (formula,
         m.prior = m.prior, sigma.prior = sigma.prior, aux.iters = aux.iters)
     out
 
+}
+
+
+theta.to.str <- function(theta) {
+    sprintf("[%s]", paste(apply(round(theta,3), 2, paste, collapse=","), collapse="] ["))
 }
