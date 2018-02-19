@@ -46,7 +46,7 @@ dp.bergm <- function (formula,
   control <- control.simulate.formula(MCMC.burnin = aux.iters, 
                                       MCMC.interval = 0)
   control$MCMC.samplesize <- 1
-  control$parallel <- 3
+  control$parallel <- 4
 
   MHproposal <- MHproposal.ergm(object= model, 
                                 constraints = ~., arguments = control$MCMC.prop.args, 
@@ -217,6 +217,10 @@ standard.bergm <- function (formula,
     tot.iters <- burn.in + main.iters
 
     for (k in 1L:tot.iters) {
+        if (k%%100 == 1) {
+          print(sprintf("Completed %d iterations. Theta = ", k, theta))
+          
+        } 
         for (h in 1L:nchains) {
             if (Clist$nstats > 1 && nchains > 1) {
                 snooker <- gamma * apply(theta[, sample(seq(1, nchains)[-h], 2)], 1, diff)
@@ -237,7 +241,7 @@ standard.bergm <- function (formula,
                                     control, 
                                     verbose = FALSE)$s
             
-            delta <- as.vector(delta - noise$draw)
+            #delta <- as.vector(delta - noise$draw)
 
             # MH Acceptance probability <- CAN CHANGE THIS ACCEPTANCE PROBABILITY                       
             beta <- (theta[, h] - theta1) %*% delta + pr[1] - pr[2]
