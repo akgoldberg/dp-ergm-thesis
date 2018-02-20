@@ -129,9 +129,32 @@ dist.noise.samples <- function(nws.samples, dp.epsilon, dp.delta) {
     new$dp.k <- dp.k
     out <- rbind(out, data.frame(rbind(unlist(new))))
   }
-  rownames(out) <- out$n
-  out$n <- NULL
   return(out)
+}
+
+plot.noise.samples <- function(out, dp.epsilon) {
+  xrange <- range(out$n)
+  yrange <- range(out$ktri.restr, out$ktri.smooth)
+  yrange[2] <- yrange[2] + 10
+  yrange[1] <- yrange[1] - 10
+  plot(xrange, yrange,  type="n", xlab="n", ylab="Noise Level", main=)
+  pchs <- c(16,17)
+  colors = c("dark green", "dark red")
+  lines(out$n, out$ktri.restr, type='b',  col=colors[1], pch=pchs[1])
+  lines(out$n, out$ktri.smooth, type='b',  col=colors[2], pch=pchs[2])
+  par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+  legend("topright", inset=c(-0.3, 0), legend = c("Restricted", "Smooth"), 
+         col=colors, pch=pchs, cex=0.8)
+  title.text <- bquote(paste(epsilon, "=",.(dp.epsilon)))
+  title(main=title.text, font.main=4)
+}
+
+add_legend <- function(...) {
+  opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
+              mar=c(0, 0, 0, 0), new=TRUE)
+  on.exit(par(opar))
+  plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
+  legend(...)
 }
 
 
