@@ -8,5 +8,5 @@ library(mvtnorm)
 library(SparseM)
 library(tictoc)
 
-setwd("~/Documents/Harvard/Senior Year/Thesis/project/code")
-
+# setwd("~/Documents/Harvard/Senior Year/Thesis/project/code")
+setwd("/home/rstudio/dp-ergm-thesis/code")
