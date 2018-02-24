@@ -43,21 +43,18 @@ nonprivate.model <- bergm(nw ~ edges
                   sigma.epsilon = sigma.epsilon)
 toc()
 
-bergm.output(dp.model, lag.max=500)
-
-dp.standard.model <- standard.bergm(nw ~ edges + altkstar(0.5, fixed=TRUE) 
-                                    + gwesp(0.5, fixed=TRUE), 
-                                    dp.epsilon = dp.epsilon,
-                                    dp.k = dp.k,
-                                    privacy.type='edge',
-                                    dp.delta = NULL,
-                                    burn.in=30000,
-                                    main.iters=10000,
-                                    aux.iters=20000, 
-                                    m.prior = m.prior, 
-                                    sigma.prior = sigma.prior, 
-                                    nchains = 1, 
-                                    sigma.epsilon = sigma.epsilon)
-
-
-  
+# fit 300 edge network
+dp.epsilon <- 1.
+dp.k <- round(1.1*max(samples5.300$deg))
+nw.private <- make.private(nw ~ edges + gwesp(0.5, fixed=TRUE) 
+                               + gwdsp(0.5, fixed=TRUE),
+                                dp.epsilon, dp.k)
+fit.private <- bergm.orig.private(nw.private$formula,
+                   nw.private$noise,
+                   burn.in = 2500,
+                   main.iters = 5000,
+                   aux.iters = 0.25*choose(300,2), 
+                   nchains = 1,
+                   sigma.epsilon = diag(c(0.001, 0.001, 0.0001)),
+                   print.out = 100)
+bergm.output(dp.model, lag.max=100)

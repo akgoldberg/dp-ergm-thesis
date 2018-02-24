@@ -132,40 +132,87 @@ dist.noise.samples <- function(nws.samples, dp.epsilon, dp.delta) {
   return(out)
 }
 
-plot.noise.samples <- function(out, dp.epsilon) {
-  xrange <- range(out$n)
-  yrange <- range(out$ktri.restr, out$ktri.smooth)
-  yrange[2] <- yrange[2] + 10
-  yrange[1] <- yrange[1] - 10
-  plot(xrange, yrange,  type="n", xlab="n", ylab="Noise Level", main=)
-  pchs <- c(16,17)
-  colors = c("dark green", "dark red")
-  lines(out$n, out$ktri.restr, type='b',  col=colors[1], pch=pchs[1])
-  lines(out$n, out$ktri.smooth, type='b',  col=colors[2], pch=pchs[2])
-  par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
-  legend("topright", inset=c(-0.3, 0), legend = c("Restricted", "Smooth"), 
-         col=colors, pch=pchs, cex=0.8)
+plot.noise.sample <- function(nws.samples, dp.epsilon, stat) {
+  df <- dist.noise.samples(nws.samples, dp.epsilon, 1e-6)
+  if (stat == 'ktri') {
+    restr.noise <- df$ktri.restr
+    smooth.noise <- df$ktri.smooth
+  }
+  if (stat == 'ktwopath') {
+    restr.noise <- df$ktwop.restr
+    smooth.noise <- df$ktwop.smooth
+  }
   title.text <- bquote(paste(epsilon, "=",.(dp.epsilon)))
-  title(main=title.text, font.main=4)
+  plt <- ggplot(df, aes(x=n)) + 
+    geom_point(aes(y = restr.noise, color='restricted'), size=2) +
+    geom_point(aes(y = smooth.noise, color='smooth'), size=2) +
+    geom_line(aes(y = restr.noise, color='restricted')) +
+    geom_line(aes(y = smooth.noise, color='smooth')) +
+    ggtitle(title.text) +
+    ylab('Noise Level') +
+    theme(axis.text.x = element_text(size=6, angle=45),
+          axis.text.y = element_text(size=6),
+          axis.title.x = element_text(size=8, margin=unit(c(-5, 0, 0, 0), "pt")),
+          axis.title.y = element_text(size=8)) +
+    scale_y_continuous(breaks = scales::pretty_breaks(n = 9)) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 9)) +
+    labs(color='Sensitivity:') +
+    theme(plot.margin = unit(c(-15,1,5,5), "pt")) +
+    theme(legend.position="top", legend.title = element_text(size=10),
+          legend.text = element_text(size=10), 
+          legend.key.size = unit(0.25, "line"),
+          legend.background = element_rect(colour = 'black', size = 0.1, linetype='solid'),
+          legend.margin = margin(0.1, 0.1, 0.1, 0.1, 'cm'))
+  return(plt)
 }
 
-add_legend <- function(...) {
-  opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
-              mar=c(0, 0, 0, 0), new=TRUE)
-  on.exit(par(opar))
-  plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
-  legend(...)
+# Plot the average noise level per sample
+plot.noise.samples <- function(nws.samples, title.string, stat, dp.epsilons = c(0.1, 0.5, 1.)) {
+    plts <- list()
+    i <- 1
+    for (dp.epsilon in dp.epsilons) {
+      plts[[i]] <- plot.noise.sample(nws.samples, dp.epsilon, stat)
+      i <- i + 1
+    }
+    df.summary <- dist.noise.samples(nws.samples, 1.0, 1e-6)
+    
+    # generate plot with statistic value for sense of scale
+    if (stat == 'ktri') {
+      plt.summary <- ggplot(df.summary, aes(x=n, y=altktri))
+    }
+    if (stat == 'ktwopath') {
+      plt.summary <- ggplot(df.summary, aes(x=n, y=altktwopath))
+    }
+    plts[[i+1]] <- 
+      plt.summary + 
+      geom_point(size=2) +
+      geom_line() +
+      ggtitle("Computed Statisic Value") +
+      ylab('Value') +
+      theme(axis.text.x = element_text(size=6, angle=45),
+            axis.text.y = element_text(size=6),
+            axis.title.x = element_text(size=8, margin=unit(c(-5, 0, 0, 0), "pt")),
+            axis.title.y = element_text(size=8),
+            plot.title = element_text(size=12, face='plain')) +
+      scale_y_continuous(breaks = scales::pretty_breaks(n = 8)) +
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
+    
+    legend <- get_legend(plts[[1]])
+    plts <- lapply(plts, function (plt)  plt + theme(legend.position="none"))
+    
+    prow <- plot_grid(plotlist=plts) 
+    prowlegend <- plot_grid(legend, prow, ncol=1, rel_heights = c(.2, 1))
+    title <- ggdraw() + draw_label(title.string, fontface='bold', size = 12)
+    plot_grid(title, prowlegend + theme(plot.margin = unit(c(-15,1,5,5), "pt")), ncol=1, rel_heights=c(0.1, 1))
 }
-
-
 
 ################################################################################
 ##                                Generate/Load Samples                       ##
 ################################################################################
 
 # generate samples from n = start to 1000
-generate.samples <- function(samp.id, start=100) {
-  for (n in seq(start,1000, 100)) {
+generate.samples <- function(samp.id, start=100, stop=1000) {
+  for (n in seq(start,stop, 100)) {
     tic(sprintf("Sample n=%d", n))
     tic(sprintf("n=%d - sampling", n))
     print(sprintf("Starting sample with %d nodes...", n))
@@ -190,7 +237,7 @@ generate.samples <- function(samp.id, start=100) {
 load.samples <- function(samp.id, start=100, stop=1000) {
   i <- 1
   samples <- list()
-  for (n in seq(start,1000, 100)) {
+  for (n in seq(start, stop, 100)) {
     samp_name <- sprintf("obj/samples/sample%d-%d", samp.id, n)
     load(samp_name)
     samples[[i]] <- samp
