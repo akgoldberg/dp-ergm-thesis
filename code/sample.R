@@ -36,41 +36,6 @@ sample_ergm <- function(n, theta, nsim=50, verbose=TRUE) {
                "altktwopath" = altktwopath, "edge" = edge))
 }
 
-################################################################################
-##                                  Helpers                                   ##
-################################################################################
-
-# compute the max degree node of a network
-network.maxdegree <- function(network) {
-  nw.mat <- as.matrix.csr(as.matrix.network(network))
-  nw.degs <- diag((nw.mat %*% nw.mat))
-  return(max(nw.degs))
-}
-
-# compute max shared partner of network
-network.maxsharedpartners <- function(network) {
-    nw.mat <- as.matrix.csr(as.matrix.network(network))
-    nw.prod <- as.matrix(nw.mat %*% nw.mat)
-    diag(nw.prod) <- 0
-    return(max(nw.prod))
-}
-
-network.numedges <- function(network) {
-  return(length(network$mel))
-}
-
-network.altkstar <- function(network, lambda=0.5) {
-  return(summary(network ~ altkstar(lambda, fixed=TRUE))[[1]])
-}
-
-network.altktri <- function(network, lambda=0.5) {
-    return(summary(network ~ gwesp(lambda, fixed=TRUE))[[1]])
-}
-
-network.altktwopath <- function(network, lambda=0.5) {
-    return(summary(network ~ gwdsp(lambda, fixed=TRUE))[[1]])
-}
-
 # compute distribution of graph statistics
 dist.samples <- function(nws, type) {
     if (type == "deg") return(unlist(lapply(nws, network.maxdegree)))
@@ -180,8 +145,12 @@ plot.noise.samples <- function(nws.samples, title.string, stat, dp.epsilons = c(
     if (stat == 'ktri') {
       plt.summary <- ggplot(df.summary, aes(x=n, y=altktri))
     }
-    if (stat == 'ktwopath') {
+    else if (stat == 'ktwopath') {
       plt.summary <- ggplot(df.summary, aes(x=n, y=altktwopath))
+    } 
+    else {
+      print("Valid stats: ktri or ktwopath")
+      return()
     }
     plts[[i+1]] <- 
       plt.summary + 
@@ -218,8 +187,9 @@ generate.samples <- function(samp.id, start=100, stop=1000) {
     print(sprintf("Starting sample with %d nodes...", n))
     p <- log(n)/(2*n)
     theta1 <- log(p/(1-p))
-    theta3 <- 0.
-    theta <- c(theta1, 0, theta3, 0)
+    theta3 <- -2.
+    theta4 <- 1.
+    theta <- c(theta1, 0, theta3, theta4)
     samp <- sample_ergm(n, theta, 50, verbose=TRUE)
     print(sprintf("Samples have avg. edges: %g, max degree: %d, max shared partners: %d", mean(samp$edge), max(samp$deg), max(samp$sp)))
     toc()

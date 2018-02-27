@@ -3,7 +3,7 @@
 #####################################################################
 
 # Project the network to H_k and add noise to suff stats
-make.private <- function (formula, dp.epsilon, dp.k, privacy.type="edge", dp.delta=NULL) {
+make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge", dp.delta=NULL) {
   # project network to H_k
   # get original network
   y.orig <- ergm.getnetwork(formula)
@@ -25,6 +25,7 @@ make.private <- function (formula, dp.epsilon, dp.k, privacy.type="edge", dp.del
   noise$dp.epsilon <- dp.epsilon
   if (privacy.type == "node") noise$dp.delta <- dp.delta
   noise$dp.k <- dp.k
+  noise$method <- "restr"
   return(list("formula" = formula, "noise" = noise))
 }
 
@@ -143,6 +144,7 @@ projection.edge <- function(nw, dp.k) {
 
 # projection into H_k for node-level privacy
 projection.node <- function(nw, dp.k) {
+
   tic("LP setup")
   
   nw.mat <- as.matrix(nw)
@@ -154,56 +156,50 @@ projection.node <- function(nw, dp.k) {
   # objective function
   objective.in <- c(rep(1, n), rep(0, choose(n,2)))
 
-  # non-negativity constraints
-  const.mat.nonneg <- diag(num.vars)
-  const.dir.nonneg <- rep(">=", num.vars)
-  const.rhs.nonneg <- rep(0,num.vars)
-
+  # set up matrix of all edges incident to vertex u/v (load from file if possible)
+  fname <- sprintf("obj/lp_setup/const.%d", n)
+  if (!file.exists(fname)) {
+    adj.mat <- Matrix(0, nrow=n, ncol=choose(n,2), sparse=TRUE)
+    x <- 1
+    for (v in 2:n) {
+      for (u in 1:(v-1)) {
+        adj.mat[c(u,v), x] = 1
+        x <- x + 1
+      }
+    }
+    # save matrix to file
+    save(adj.mat, file = fname)
+  } else {
+    load(fname)
+  }
+  
+  
   # projection constraints
-  const.mat.proj1 <- cbind(matrix(0, nrow=choose(n,2), ncol=n), diag(choose(n,2)))
+  const.mat.proj1 <- cbind(Matrix(0, nrow=choose(n,2), ncol=n, sparse=TRUE), .sparseDiagonal(choose(n,2)))
   const.dir.proj1 <- rep("<=", choose(n,2))
   const.rhs.proj1 <- a
   
-  # set up matrix of u's and v's for w_uv + x_u + x_v >= a_uv
-  x.uv.mat <- matrix(0, nrow=choose(n,2), ncol=n)
-  row <- 1
-  for (v in 2:n) {
-    for (u in 1:(v-1)) {
-       x.uv.mat[row, u] <- 1
-       x.uv.mat[row, v] <- 1
-       row <- row + 1
-    }
-  }
-  const.mat.proj2 <- cbind(x.uv.mat, diag(choose(n,2)))
+  const.mat.proj2 <- cbind(t(adj.mat), .sparseDiagonal(choose(n,2)))
   const.dir.proj2 <- rep(">=", choose(n,2))
   const.rhs.proj2 <- a
 
-  # restricted degree constraint
-  # set up matrix of all edges incident to vertex u
-   u.mat <- matrix(0, nrow=n, ncol=choose(n,2))
-   x <- 1
-   for (v in 2:n) {
-    for (u in 1:(v-1)) {
-       u.mat[u, x] = 1
-       u.mat[v, x] = 1
-       x <- x + 1
-    }
-  }
-  const.mat.rs <- cbind(matrix(0, nrow=n, ncol=n), u.mat)
+  const.mat.rs <- cbind(matrix(0, nrow=n, ncol=n), adj.mat)
   const.dir.rs <- rep("<=", n)
   const.rhs.rs <- rep(dp.k, n)
 
-  const.mat <- rbind(const.mat.nonneg, const.mat.proj1, const.mat.proj2, const.mat.rs)
-  const.dir <- c(const.dir.nonneg, const.dir.proj1, const.dir.proj2, const.dir.rs)
-  const.rhs <- c(const.rhs.nonneg, const.rhs.proj1, const.rhs.proj2, const.rhs.rs)
+  # setup of constraints
+  const.mat <- rbind(const.mat.proj1, const.mat.proj2, const.mat.rs)
+  const.dir <- c(const.dir.proj1, const.dir.proj2, const.dir.rs)
+  const.rhs <- c(const.rhs.proj1, const.rhs.proj2, const.rhs.rs)
   
   toc()
   
   tic("LP solution")
-  LP <- lp(direction = "min", objective.in, const.mat, const.dir, const.rhs)
+   # all vars are non-negative + real by default 
+  LP <- Rglpk_solve_LP(objective.in, const.mat, const.dir, const.rhs, max=FALSE)
   toc()
   
-  d.hat <- 4*LP$objval
+  d.hat <- 4*LP$optimum
   to.remove <- LP$solution[1:n] >= 0.25
   nw.mat[to.remove,] <- 0
   nw.mat[,to.remove] <- 0
@@ -211,4 +207,5 @@ projection.node <- function(nw, dp.k) {
   
   return(list("y" = y, "d.hat" = d.hat, "lp" = LP))
 }
+
 
