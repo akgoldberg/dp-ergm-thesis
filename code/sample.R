@@ -180,22 +180,17 @@ plot.noise.samples <- function(nws.samples, title.string, stat, dp.epsilons = c(
 ################################################################################
 
 # generate samples from n = start to 1000
-generate.samples <- function(samp.id, start=100, stop=1000) {
+generate.samples <- function(samp.id, start=100, stop=1000, theta=NULL, verbose=FALSE) {
   for (n in seq(start,stop, 100)) {
     tic(sprintf("Sample n=%d", n))
     tic(sprintf("n=%d - sampling", n))
     print(sprintf("Starting sample with %d nodes...", n))
-    p <- log(n)/(2*n)
-    theta1 <- log(p/(1-p))
-    theta3 <- -2.
-    theta4 <- 1.
-    theta <- c(theta1, 0, theta3, theta4)
-    samp <- sample_ergm(n, theta, 50, verbose=TRUE)
+    samp <- sample_ergm(n, theta, 50, verbose=verbose)
     print(sprintf("Samples have avg. edges: %g, max degree: %d, max shared partners: %d", mean(samp$edge), max(samp$deg), max(samp$sp)))
     toc()
     tic(sprintf("n=%d - saving", n))
     print(sprintf("Saving sample with %d nodes...", n))
-    samp_name <- sprintf("obj/samples/sample%d-%d", samp.id, n)
+    samp_name <- sprintf("obj/samples.final/sample%d-%d", samp.id, n)
     save(samp, file=samp_name)
     remove(samp)
     toc()
@@ -216,3 +211,46 @@ load.samples <- function(samp.id, start=100, stop=1000) {
   }
   return(samples)
 }
+
+
+
+#### GENERATE SAMPLES ####
+p <- log(n)/(2*n)
+theta1 <- log(p/(1-p))
+theta2 <- 0.
+theta3 <- 1.
+theta4 <- 0.
+theta <- c(theta1, theta2, theta3, theta4)
+generate.samples(1, theta=theta)
+
+p <- log(n)/(n)
+theta1 <- log(p/(1-p))
+theta2 <- 0.
+theta3 <- -1.
+theta4 <- 0.
+theta <- c(theta1, theta2, theta3, theta4)
+generate.samples(2, theta=theta)
+
+p <- log(n)/(2*n)
+theta1 <- log(p/(1-p))
+theta2 <- 0.
+theta3 <- 2.0
+theta4 <- -0.1
+theta <- c(theta1, theta2, theta3, theta4)
+generate.samples(3, theta=theta)
+
+p <- log(n)/(2*n)
+theta1 <- log(p/(1-p))
+theta2 <- 0.
+theta3 <- -2.0
+theta4 <- 0.1
+theta <- c(theta1, theta2, theta3, theta4)
+generate.samples(4, theta=theta)
+
+p <- log(n)/(2*n)
+theta1 <- log(p/(1-p))
+theta2 <- 2.0
+theta3 <- -2.0
+theta4 <- 0.1
+theta <- c(theta1, theta2, theta3, theta4)
+generate.samples(5, theta=theta)
