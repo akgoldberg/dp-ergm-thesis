@@ -113,7 +113,7 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot, dp.k, privacy.type, 
     }
   }
   # draw Laplace noise to use
-  noise.draw <- rlaplace(n = length(terms), s = noise.level)
+  noise.draw <- rlaplace(n = length(terms), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))
 }
 

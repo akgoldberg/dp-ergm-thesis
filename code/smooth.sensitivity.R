@@ -63,7 +63,7 @@ draw.lap.noise.smooth <- function (terms, dp.epsilonTot, dp.deltaTot, max.sp, ma
     }
   }
    # draw Laplace noise to use
-  noise.draw <- rlaplace(n = length(terms), s = noise.level)
+  noise.draw <- rlaplace(n = length(terms), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))
 }
 
@@ -89,7 +89,7 @@ draw.lap.noise.smooth.term <- function(term, param, dp.epsilon, dp.delta, max.sp
         noise.level <- (ls.x + rlaplace(n=1,s=gs.ls/dp.epsilon) + a*gs.ls)/dp.epsilon
     }
     # draw Laplace noise to use
-    noise.draw <- rlaplace(n = 1, s = noise.level)
+    noise.draw <- rlaplace(n = 1, scale = noise.level)
     return(list("level" = noise.level, "draw" = noise.draw))
 }
 
