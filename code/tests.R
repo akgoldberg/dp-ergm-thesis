@@ -4,7 +4,7 @@ run.noise.tests <- function(samples, dp.epsilons, dp.delta=1e-6, stop=1000) {
   df <- data.frame("n"=numeric(), "type"=character(), "stat.name"=character(),
                    "dp.k"=numeric(), "eps"=numeric(), "delta"=numeric(),
                    "scale"=numeric(), "stat.value"=numeric(), "bias"=numeric(),
-                   "rmse"=numeric())
+                   "rmse"=numeric(), "dp.klevel"=character())
   
   # iterate over all samples (over synthetic networks of size n=100,200,...)
   for (sample in samples) {
@@ -33,15 +33,19 @@ run.noise.tests <- function(samples, dp.epsilons, dp.delta=1e-6, stop=1000) {
 run.noise.tests.restr <- function(sample, dp.epsilon) {
   # test (min, median, max, 1.5*max)
   dp.ks <- c(min(sample$deg), median(sample$deg), max(sample$deg), 1.5*max(sample$deg))
+  dp.klevels <- c("min", "median", "max", "conservative")
   # collect data frames for different k
   df.rows <- data.frame()
 
-  for (dp.k in dp.ks) {
+  for (iter in 1:length(dp.ks)) {
+    dp.k <- dp.ks[iter]
+    
     # set up row to add to dataframe
     row <- list()
     row$n <- sample$n
     row$type <- "restricted"
     row$dp.k <- dp.k
+    row$dp.klevel <-dp.klevels[iter] 
     row$eps <- dp.epsilon
     row$delta <- NULL
 
