@@ -32,8 +32,10 @@ run.noise.tests <- function(samples, dp.epsilons, dp.delta=1e-6, stop=1000) {
 # Test restricted sensitivty for model with different values of k
 run.noise.tests.restr <- function(sample, dp.epsilon) {
   # test (min, median, max, 1.5*max)
-  dp.ks <- c(min(sample$deg), median(sample$deg), max(sample$deg), 1.5*max(sample$deg))
-  dp.klevels <- c("min", "median", "max", "conservative")
+  #dp.ks <- c(min(sample$deg), median(sample$deg), max(sample$deg), 1.5*max(sample$deg))
+ # dp.klevels <- c("min", "median", "max", "conservative")
+ dp.ks <- c(0.75*min(sample$deg))
+ dp.klevels <- c("aggressive")
   # collect data frames for different k
   df.rows <- data.frame()
 
