@@ -3,22 +3,26 @@
 #####################################################################
 
 # Project the network to H_k and add noise to suff stats
-make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge", dp.delta=NULL) {
+make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge", dp.delta=NULL, proj=TRUE) {
   # project network to H_k
   # get original network
   y.orig <- ergm.getnetwork(formula)
   
-  d.hat <- NULL
-  # project network to H_k
-  if (privacy.type=="edge") y <- projection.edge(y.orig, dp.k)
-  if (privacy.type=="node") {
-    out <- projection.node(y.orig, dp.k)
-    y <- out$y
-    d.hat <- out$d.hat
+  if (proj) {
+    d.hat <- NULL
+    # project network to H_k
+    if (privacy.type=="edge") y <- projection.edge(y.orig, dp.k)
+    if (privacy.type=="node") {
+      out <- projection.node(y.orig, dp.k)
+      y <- out$y
+      d.hat <- out$d.hat
+    }
+     # update formula with projection
+    formula <- nonsimp.update.formula(formula, y ~ ., from.new=TRUE)
+  } else {
+    y <- y.orig
   }
-  
-  # update formula with projection
-  formula <- nonsimp.update.formula(formula, y ~ ., from.new=TRUE)
+ 
   model <- ergm.getmodel(formula, y)
   # draw laplace noise
   noise <- draw.lap.noise.restricted(model$terms, dp.epsilon, dp.k, privacy.type, dp.delta, d.hat)
@@ -113,7 +117,7 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot, dp.k, privacy.type, 
     }
   }
   # draw Laplace noise to use
-  noise.draw <- rlaplace(n = length(terms), s = noise.level)
+  noise.draw <- rlaplace(n = length(terms), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))
 }
 
@@ -121,26 +125,31 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot, dp.k, privacy.type, 
 ##                            Projections to H_k                      ##
 ########################################################################
 
-# projection into H_k for edge-level privacy
 projection.edge <- function(nw, dp.k) {
   edge.list <- as.edgelist(nw)
   edge.ordering <- sample(1L:length(edge.list[,1]))
+  nw.mat <- as.matrix(nw)
+  
   # fix ordering of edges and iterate over it
   for (i in edge.ordering) {
     u <- edge.list[i, 1]
     v <- edge.list[i, 2]
-    u.deg <- length(get.edgeIDs(nw, u))
-    v.deg <- length(get.edgeIDs(nw, v))
+    u.deg <- sum(nw.mat[u,])
+    v.deg <- sum(nw.mat[v,])
     # if too many edges
     if (max(u.deg, v.deg) > dp.k) {
-      # get edge id associated w/ edge between u and v
-      e.id <- get.edgeIDs(nw, u, v)
-      # delete that edge
-      delete.edges(nw, e.id)
+      nw.mat[u,v] <- 0
+      nw.mat[v,u] <- 0
     }
+    if(i%%1000==0) {
+      nw.mat.sparse <- as.matrix.csr(nw.mat)
+      if (max(diag((nw.mat.sparse %*% nw.mat.sparse))) <= dp.k) return(network(nw.mat, directed=FALSE))
+    } 
   }
   return(nw)
 }
+
+
 
 # projection into H_k for node-level privacy
 projection.node <- function(nw, dp.k) {

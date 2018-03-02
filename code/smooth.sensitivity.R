@@ -3,12 +3,13 @@
 ################################################################################
 
 # Add noise to suff stats
-make.private.smooth <- function (formula, dp.epsilon, dp.delta) {
+make.private.smooth <- function (formula, dp.epsilon, dp.delta, max.deg = NULL, max.sp = NULL) {
   # get original network
   y <- ergm.getnetwork(formula)
-  max.sp <- network.maxsharedpartners(y)
-  max.deg <- network.maxdegree(y)
 
+  if (is.null(max.deg))   max.deg <- network.maxdegree(y)
+  if (is.null(max.sp)) max.sp <- network.maxsharedpartners(y)
+ 
   model <- ergm.getmodel(formula, y)
   # draw laplace noise
   noise <- draw.lap.noise.smooth(model$terms, dp.epsilon, dp.delta, max.sp, max.deg)
@@ -63,7 +64,7 @@ draw.lap.noise.smooth <- function (terms, dp.epsilonTot, dp.deltaTot, max.sp, ma
     }
   }
    # draw Laplace noise to use
-  noise.draw <- rlaplace(n = length(terms), s = noise.level)
+  noise.draw <- rlaplace(n = length(terms), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))
 }
 
@@ -81,15 +82,15 @@ draw.lap.noise.smooth.term <- function(term, param, dp.epsilon, dp.delta, max.sp
     if (term == 'gwesp') {
         ls.x <- 1./param + 2*max.sp
         gs.ls <- 2
-        noise.level <- (ls.x + rlaplace(n=1,s=gs.ls/dp.epsilon) + a*gs.ls)/dp.epsilon
+        noise.level <- max(1e-6,(ls.x + rlaplace(n=1,s=gs.ls/dp.epsilon) + a*gs.ls)/dp.epsilon)
     }
     if (term == 'gwdsp') {
         ls.x <- 2*max.deg
         gs.ls <- 2
-        noise.level <- (ls.x + rlaplace(n=1,s=gs.ls/dp.epsilon) + a*gs.ls)/dp.epsilon
+        noise.level <- max(1e-6,(ls.x + rlaplace(n=1,s=gs.ls/dp.epsilon) + a*gs.ls)/dp.epsilon)
     }
     # draw Laplace noise to use
-    noise.draw <- rlaplace(n = 1, s = noise.level)
+    noise.draw <- rlaplace(n = 1, scale = noise.level)
     return(list("level" = noise.level, "draw" = noise.draw))
 }
 

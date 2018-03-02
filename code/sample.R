@@ -64,30 +64,47 @@ get.draws  <- function(noise) {
 ################################################################################
 ##             Compute Noise Added on Sample for Smooth vs. Restricted        ##
 ################################################################################
-test.noise.sample <- function(nws.sample, dp.epsilon, dp.delta, dp.k) {
-    # alt k triangle noise
-    ktri.noise.smooth <- lapply(nws.sample$sp, draw.lap.noise.smooth.term,
-                                 term = "gwesp", param = 0.5, dp.epsilon = dp.epsilon, dp.delta = dp.delta, max.deg=NULL)
-    
-    terms <- list(c(list("name" = c("gwesp"), "inputs" = c(0.5))))
-    ktri.noise.restr <- draw.lap.noise.restricted(terms, dp.epsilon, dp.k, "edge")
-    ktri.noise.level <- list("smooth" = mean(get.levels(ktri.noise.smooth)), "restricted" = ktri.noise.restr$level)
+test.noise.sample <- function(nws.sample, dp.epsilon, dp.delta, dp.ks, dp.knames) {
+    out <- vector("list", length(dp.ks))
 
-    # gwdsp noise
-    ktwop.noise.smooth <- lapply(nws.sample$deg, draw.lap.noise.smooth.term, 
-                                    term = "gwdsp", param = 0.5, dp.epsilon = dp.epsilon, dp.delta = dp.delta, max.sp=NULL)
-    terms <-list(c(list("name" = c("gwdsp"), "inputs" = c(0.5))))
-    ktwop.noise.restr <- draw.lap.noise.restricted(terms, dp.epsilon, dp.k, "edge")
-    ktwop.noise.level <- list("smooth" = mean(get.levels(ktwop.noise.smooth)), "restricted" = ktwop.noise.restr$level)
+    for (i in 1:length(dp.ks)) {
+      dp.k <- dp.ks[i]
+      dp.kname <- dp.knames[i]
+
+      # alt k triangle noise
+      ktri.noise.smooth <- lapply(nws.sample$sp, draw.lap.noise.smooth.term,
+                                  term = "gwesp", param = 0.5, dp.epsilon = dp.epsilon, dp.delta = dp.delta, max.deg=NULL)
+      
+      terms <- list(c(list("name" = c("gwesp"), "inputs" = c(0.5))))
+      ktri.noise.restr <- draw.lap.noise.restricted(terms, dp.epsilon, dp.k, "edge")
+      ktri.noise.level <- list("smooth" = mean(get.levels(ktri.noise.smooth)), "restricted" = ktri.noise.restr$level)
+
+      # gwdsp noise
+      ktwop.noise.smooth <- lapply(nws.sample$deg, draw.lap.noise.smooth.term, 
+                                      term = "gwdsp", param = 0.5, dp.epsilon = dp.epsilon, dp.delta = dp.delta, max.sp=NULL)
+      terms <-list(c(list("name" = c("gwdsp"), "inputs" = c(0.5))))
+      ktwop.noise.restr <- draw.lap.noise.restricted(terms, dp.epsilon, dp.k, "edge")
+      ktwop.noise.level <- list("smooth" = mean(get.levels(ktwop.noise.smooth)), "restricted" = ktwop.noise.restr$level)
+
+      noise.out <- list("ktri" = ktri.noise.level, "ktwop" = ktwop.noise.level, "ktype" = dp.kname)
+      out[[i]] <- noise.out
+    }
     
-    return(list("ktri" = ktri.noise.level, "ktwop" = ktwop.noise.level))
+    return(out)
 }
 
 dist.noise.samples <- function(nws.samples, dp.epsilon, dp.delta) {
   out <- data.frame()
   for (nws.sample in nws.samples) {
-    dp.k <- max(nws.sample$deg) + 1
-    new <- test.noise.sample(nws.sample, dp.epsilon, dp.delta, dp.k)
+    ######## TEST FOR DIFFERENT k's####
+    dp.k.min <- min(nws.sample$deg)
+    dp.k.med <- median(nws.sample$deg)
+    dp.k.max <- max(nws.sample$deg)
+    dp.k.cons <- 1.5*max(nws.sample$deg)
+    dp.ks <- c(dp.k.min, dp.k.med, dp.k.max, dp.k.cons)
+    dp.knames <- c("min", "med", "max", "conservative")
+    
+    new <- test.noise.sample(nws.sample, dp.epsilon, dp.delta, dp.ks, dp.knames)
     new$n <- nws.sample$n
     new$altktri <- mean(nws.sample$altktri)
     new$altktwopath <- mean(nws.sample$altktwopath)
@@ -185,6 +202,8 @@ generate.samples <- function(samp.id, start=100, stop=1000, theta=NULL, verbose=
     tic(sprintf("Sample n=%d", n))
     tic(sprintf("n=%d - sampling", n))
     print(sprintf("Starting sample with %d nodes...", n))
+    p <- log(n)/(theta1.factor*n)
+    # theta[1] <- log(p/(1-p))
     samp <- sample_ergm(n, theta, 50, verbose=verbose)
     print(sprintf("Samples have avg. edges: %g, max degree: %d, max shared partners: %d", mean(samp$edge), max(samp$deg), max(samp$sp)))
     toc()
@@ -203,7 +222,7 @@ load.samples <- function(samp.id, start=100, stop=1000) {
   i <- 1
   samples <- list()
   for (n in seq(start, stop, 100)) {
-    samp_name <- sprintf("obj/samples/sample%d-%d", samp.id, n)
+    samp_name <- sprintf("obj/samples.final/sample%d-%d", samp.id, n)
     load(samp_name)
     samples[[i]] <- samp
     remove(samp)
@@ -214,43 +233,43 @@ load.samples <- function(samp.id, start=100, stop=1000) {
 
 
 
-#### GENERATE SAMPLES ####
-p <- log(n)/(2*n)
-theta1 <- log(p/(1-p))
-theta2 <- 0.
-theta3 <- 1.
-theta4 <- 0.
-theta <- c(theta1, theta2, theta3, theta4)
-generate.samples(1, theta=theta)
+# #### GENERATE SAMPLES ####
+# theta1.factor <- 2.
+# theta1 <- 0
+# theta2 <- 0.
+# theta3 <- 1.
+# theta4 <- 0.
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(1, theta=theta)
 
-p <- log(n)/(n)
-theta1 <- log(p/(1-p))
-theta2 <- 0.
-theta3 <- -1.
-theta4 <- 0.
-theta <- c(theta1, theta2, theta3, theta4)
-generate.samples(2, theta=theta)
+# theta1.factor <- 2.
+# theta1 <- 0
+# theta2 <- 0.
+# theta3 <- -1.
+# theta4 <- 0.
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(2, theta=theta)
 
-p <- log(n)/(2*n)
-theta1 <- log(p/(1-p))
-theta2 <- 0.
-theta3 <- 2.0
-theta4 <- -0.1
-theta <- c(theta1, theta2, theta3, theta4)
-generate.samples(3, theta=theta)
+# theta1.factor <- 2.
+# theta1 <- 0.
+# theta2 <- 0.
+# theta3 <- 2.0
+# theta4 <- -0.1
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(3, theta=theta)
 
-p <- log(n)/(2*n)
-theta1 <- log(p/(1-p))
-theta2 <- 0.
-theta3 <- -2.0
-theta4 <- 0.1
-theta <- c(theta1, theta2, theta3, theta4)
-generate.samples(4, theta=theta)
+# theta1.factor <- 2.
+# theta1 <- 0.
+# theta2 <- 0.
+# theta3 <- -2.0
+# theta4 <- 0.1
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(4, theta=theta)
 
-p <- log(n)/(2*n)
-theta1 <- log(p/(1-p))
-theta2 <- 2.0
-theta3 <- -2.0
-theta4 <- 0.1
-theta <- c(theta1, theta2, theta3, theta4)
-generate.samples(5, theta=theta)
+# theta1.factor <- 2.
+# theta1 <- 0.
+# theta2 <- 2.0
+# theta3 <- -2.0
+# theta4 <- 0.1
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(5, theta=theta)
