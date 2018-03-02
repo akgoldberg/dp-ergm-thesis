@@ -12,7 +12,7 @@ library(Rglpk)
 library(Matrix)
 library(data.table)
 
-setwd("~/Documents/Harvard/Senior Year/Thesis/project/code")
+#setwd("~/Documents/Harvard/Senior Year/Thesis/project/code")
 #setwd("/home/rstudio/dp-ergm-thesis/code")
 
 source('nw.helpers.R')
