@@ -29,7 +29,7 @@ bergm.modified.private <- function (formula,
     stats0 <- stats0 + noise$draw
   } 
 
-  print(sprintf("Noisy Stats: %s", sstats.to.str(stats0)))
+  print(sprintf("Noisy Stats: %s", sstats.to.str(matrix(stats0))))
   control <- control.simulate.formula(MCMC.burnin = aux.iters, 
                                       MCMC.interval = 0)
   control$MCMC.samplesize <- 1
@@ -56,14 +56,14 @@ bergm.modified.private <- function (formula,
   tot.iters <- burn.in + main.iters
   
   # initialize best guess of model to the noisy suff stats
-  suffstats.old <- stats0 
-  # initialize best guess of how far off probability is (MAY NEED TO CHANGE THIS!!!)
-  if (noise$method == "rr") edge.diff.old <- 0
+  suffstats.old <-  matrix(rep(stats0, nchains), Clist$nstats, nchains)
+  # initialize best guess of how far off probability is 
+  if (noise$method == "rr") edge.diff.old <- rep(0, nchains)
   
   for (k in 1L:tot.iters) {
     if (k%%print.out == 0) {
       print(sprintf("Completed %d iterations. Thetas = %s", k, theta.to.str(theta)))
-      print(sprintf("Best guess of suff stats is now: %s", sstats.to.str(suffstats)))
+      print(sprintf("Best guess of suff stats is now: %s", sstats.to.str(suffstats.old)))
     }  
     for (h in 1L:nchains) {
       if (Clist$nstats > 1 && nchains > 1) {
@@ -83,12 +83,13 @@ bergm.modified.private <- function (formula,
                               eta0 = theta1, 
                               control, 
                               verbose = FALSE)
-      delta <- z$s
+
+      delta <- z$s - noise$draw
       
       suffstats <- stats0 + delta
 
       # change in suff stats from x to x' -- f(x') - f(x)
-      delta.x <- suffstats - suffstats.old
+      delta.x <- suffstats - suffstats.old[, h]
       # change in unnormalized likelihood from x to x'
       beta.lik <- as.vector(theta[, h] - theta1) %*% as.vector(delta.x)
       
@@ -105,16 +106,15 @@ bergm.modified.private <- function (formula,
       if (noise$method == "rr") {
         nw.sampled <- newnw.extract(y, z)
         edge.diff <- sum(abs(as.matrix(nw.sampled) - y.mat))/2.
-        beta.x <- beta.lik + (edge.diff - edge.diff.old)*log(noise$p) 
+        beta.x <- beta.lik + (edge.diff - edge.diff.old[, h])*log(noise$p) 
       } 
       else {
-        beta.x <- beta.lik + (1./noise$level) %*% as.vector(abs(suffstats.old - stats0) - abs(suffstats - stats0))
+        beta.x <- beta.lik + (1./noise$level) %*% (abs(suffstats.old[, h] - as.vector(stats0)) - as.vector(abs(suffstats - stats0)))
       }
       
-
       # replace current best guess of x
       if (beta.x >=  log(runif(1))) {
-            suffstats.old <- suffstats
+            suffstats.old[, h] <- suffstats
             if (noise$method == "rr") edge.diff.old <- edge.diff
       }
 
@@ -143,7 +143,7 @@ bergm.orig <- function (formula,
                    aux.iters=1000, 
                    m.prior = NULL, 
                    sigma.prior = NULL, 
-                   nchains = NULL, 
+                   nchains = 1, 
                    gamma = 0.5, 
                    sigma.epsilon = NULL,
                    print.out = 1000,
@@ -237,7 +237,7 @@ bergm.orig.private <- function (formula,
                         aux.iters=1000, 
                         m.prior = NULL, 
                         sigma.prior = NULL, 
-                        nchains = NULL, 
+                        nchains = 1, 
                         gamma = 0.5, 
                         sigma.epsilon = NULL,
                         print.out = 1000,
@@ -332,5 +332,5 @@ theta.to.str <- function(theta) {
 }
 
 sstats.to.str <- function(sstats) {
-  sprintf("[%s]", paste(round(as.vector(sstats),3), collapse=","))
+   sprintf("[%s]", paste(apply(round(sstats,3), 2, paste, collapse=","), collapse="] ["))
 }

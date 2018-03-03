@@ -32,3 +32,12 @@ network.altktri <- function(network, lambda=0.5) {
 network.altktwopath <- function(network, lambda=0.5) {
     return(summary(network ~ gwdsp(lambda, fixed=TRUE))[[1]])
 }
+
+get.statname <- function(ergm.name) {
+  switch (ergm.name,
+    'edges' = 'Edges',
+    'altkstar.0.5' = 'Alt k-Star',
+    'gwesp.fixed.0.5' = 'Alt k-Triangle',
+    'gwdsp.fixed.0.5' = 'Alt k-Two-Path'
+  )
+}

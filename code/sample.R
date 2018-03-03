@@ -62,6 +62,96 @@ get.draws  <- function(noise) {
 }
 
 ################################################################################
+##                                Generate/Load Samples                       ##
+################################################################################
+
+# generate samples from n = start to 1000
+generate.samples <- function(samp.id, start=100, stop=1000, theta=NULL, verbose=FALSE) {
+  for (n in seq(start,stop, 100)) {
+    tic(sprintf("Sample n=%d", n))
+    tic(sprintf("n=%d - sampling", n))
+    print(sprintf("Starting sample with %d nodes...", n))
+    p <- log(n)/(theta1.factor*n)
+    # theta[1] <- log(p/(1-p))
+    samp <- sample_ergm(n, theta, 50, verbose=verbose)
+    print(sprintf("Samples have avg. edges: %g, max degree: %d, max shared partners: %d", mean(samp$edge), max(samp$deg), max(samp$sp)))
+    toc()
+    tic(sprintf("n=%d - saving", n))
+    print(sprintf("Saving sample with %d nodes...", n))
+    samp_name <- sprintf("obj/samples.final/sample%d-%d", samp.id, n)
+    save(samp, file=samp_name)
+    remove(samp)
+    toc()
+    toc()
+  }
+}
+
+# load generated samples
+load.samples <- function(samp.id, start=100, stop=1000) {
+  i <- 1
+  samples <- list()
+  for (n in seq(start, stop, 100)) {
+    samp_name <- sprintf("obj/samples.final/sample%d-%d", samp.id, n)
+    load(samp_name)
+    samples[[i]] <- samp
+    remove(samp)
+    i <- i+1
+  }
+  return(samples)
+}
+
+
+
+# #### GENERATE SAMPLES ####
+# theta1.factor <- 2.
+# theta1 <- 0
+# theta2 <- 0.
+# theta3 <- 1.
+# theta4 <- 0.
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(1, theta=theta)
+
+# theta1.factor <- 2.
+# theta1 <- 0
+# theta2 <- 0.
+# theta3 <- -1.
+# theta4 <- 0.
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(2, theta=theta)
+
+# theta1.factor <- 2.
+# theta1 <- 0.
+# theta2 <- 0.
+# theta3 <- 2.0
+# theta4 <- -0.1
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(3, theta=theta)
+
+# theta1.factor <- 2.
+# theta1 <- 0.
+# theta2 <- 0.
+# theta3 <- -2.0
+# theta4 <- 0.1
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(4, theta=theta)
+
+# theta1.factor <- 2.
+# theta1 <- 0.
+# theta2 <- 2.0
+# theta3 <- -2.0
+# theta4 <- 0.1
+# theta <- c(theta1, theta2, theta3, theta4)
+# generate.samples(5, theta=theta)
+
+
+
+
+
+
+
+
+
+################################################################################
 ##             Compute Noise Added on Sample for Smooth vs. Restricted        ##
 ################################################################################
 test.noise.sample <- function(nws.sample, dp.epsilon, dp.delta, dp.ks, dp.knames) {
@@ -191,85 +281,3 @@ plot.noise.samples <- function(nws.samples, title.string, stat, dp.epsilons = c(
     title <- ggdraw() + draw_label(title.string, fontface='bold', size = 12)
     plot_grid(title, prowlegend + theme(plot.margin = unit(c(-15,1,5,5), "pt")), ncol=1, rel_heights=c(0.1, 1))
 }
-
-################################################################################
-##                                Generate/Load Samples                       ##
-################################################################################
-
-# generate samples from n = start to 1000
-generate.samples <- function(samp.id, start=100, stop=1000, theta=NULL, verbose=FALSE) {
-  for (n in seq(start,stop, 100)) {
-    tic(sprintf("Sample n=%d", n))
-    tic(sprintf("n=%d - sampling", n))
-    print(sprintf("Starting sample with %d nodes...", n))
-    p <- log(n)/(theta1.factor*n)
-    # theta[1] <- log(p/(1-p))
-    samp <- sample_ergm(n, theta, 50, verbose=verbose)
-    print(sprintf("Samples have avg. edges: %g, max degree: %d, max shared partners: %d", mean(samp$edge), max(samp$deg), max(samp$sp)))
-    toc()
-    tic(sprintf("n=%d - saving", n))
-    print(sprintf("Saving sample with %d nodes...", n))
-    samp_name <- sprintf("obj/samples.final/sample%d-%d", samp.id, n)
-    save(samp, file=samp_name)
-    remove(samp)
-    toc()
-    toc()
-  }
-}
-
-# load generated samples
-load.samples <- function(samp.id, start=100, stop=1000) {
-  i <- 1
-  samples <- list()
-  for (n in seq(start, stop, 100)) {
-    samp_name <- sprintf("obj/samples.final/sample%d-%d", samp.id, n)
-    load(samp_name)
-    samples[[i]] <- samp
-    remove(samp)
-    i <- i+1
-  }
-  return(samples)
-}
-
-
-
-# #### GENERATE SAMPLES ####
-# theta1.factor <- 2.
-# theta1 <- 0
-# theta2 <- 0.
-# theta3 <- 1.
-# theta4 <- 0.
-# theta <- c(theta1, theta2, theta3, theta4)
-# generate.samples(1, theta=theta)
-
-# theta1.factor <- 2.
-# theta1 <- 0
-# theta2 <- 0.
-# theta3 <- -1.
-# theta4 <- 0.
-# theta <- c(theta1, theta2, theta3, theta4)
-# generate.samples(2, theta=theta)
-
-# theta1.factor <- 2.
-# theta1 <- 0.
-# theta2 <- 0.
-# theta3 <- 2.0
-# theta4 <- -0.1
-# theta <- c(theta1, theta2, theta3, theta4)
-# generate.samples(3, theta=theta)
-
-# theta1.factor <- 2.
-# theta1 <- 0.
-# theta2 <- 0.
-# theta3 <- -2.0
-# theta4 <- 0.1
-# theta <- c(theta1, theta2, theta3, theta4)
-# generate.samples(4, theta=theta)
-
-# theta1.factor <- 2.
-# theta1 <- 0.
-# theta2 <- 2.0
-# theta3 <- -2.0
-# theta4 <- 0.1
-# theta <- c(theta1, theta2, theta3, theta4)
-# generate.samples(5, theta=theta)
