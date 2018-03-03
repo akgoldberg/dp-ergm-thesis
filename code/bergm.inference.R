@@ -42,7 +42,7 @@ bergm.modified.private <- function (formula,
   snooker <- 0
   # initialize priors
   if (is.null(m.prior)) m.prior <- rep(0, Clist$nstats)
-  if (is.null(sigma.prior)) sigma.prior <- diag(100, Clist$nstats)
+  if (is.null(sigma.prior)) sigma.prior <- diag(5, Clist$nstats)
   if (is.null(nchains)) nchains <- 2 * Clist$nstats
   if (is.null(sigma.epsilon)) sigma.epsilon <- diag(0.0025, Clist$nstats)
   if (Clist$nstats == 1) {
@@ -167,7 +167,7 @@ bergm.orig <- function (formula,
     snooker <- 0
     # initialize priors
     if (is.null(m.prior)) m.prior <- rep(0, Clist$nstats)
-    if (is.null(sigma.prior)) sigma.prior <- diag(100, Clist$nstats)
+    if (is.null(sigma.prior)) sigma.prior <- diag(5, Clist$nstats)
     if (is.null(nchains)) nchains <- 2 * Clist$nstats
     if (is.null(sigma.epsilon)) sigma.epsilon <- diag(0.0025, Clist$nstats)
     if (Clist$nstats == 1) {
@@ -261,7 +261,7 @@ bergm.orig.private <- function (formula,
   snooker <- 0
   # initialize priors
   if (is.null(m.prior)) m.prior <- rep(0, Clist$nstats)
-  if (is.null(sigma.prior)) sigma.prior <- diag(100, Clist$nstats)
+  if (is.null(sigma.prior)) sigma.prior <- diag(5, Clist$nstats)
   if (is.null(nchains)) nchains <- 2 * Clist$nstats
   if (is.null(sigma.epsilon)) sigma.epsilon <- diag(0.0025, Clist$nstats)
   if (Clist$nstats == 1) {

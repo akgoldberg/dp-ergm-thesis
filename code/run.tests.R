@@ -16,7 +16,7 @@ source('libraries.R')
 
 sigma.epsilon = NULL
 if (i==1) sigma.epsilon=diag(c(0.025, 0.01))
-if (i==2) sigma.epsilon=diag(c(0.025, 0.001))
+if (i==2) sigma.epsilon=diag(c(0.025, 0.0005))
 
 inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE), dp.epsilon, sigma.epsilon=sigma.epsilon)
 save(inference.tests, file=sprintf("inference.tests%d-eps%g", i, dp.epsilon))
