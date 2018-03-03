@@ -247,7 +247,7 @@ visualize.noise.tests <- function(tests.id,
 ################################################################################
 
 run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.tests = 10,
-                               burn.in=10000, main.iters=10000, sigma.epsilon=NULL) {
+                               burn.in=10000, main.iters=10000, sigma.epsilon=NULL, parallel=TRUE, non.private=TRUE) {
   
   
   samples <- load.samples(samp.id, start=n, stop=n)[[1]]
@@ -259,32 +259,62 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   print(sprintf("Running tests with sample=%d, n=%d, k=%d, eps=%g", samp.id, n, dp.k, dp.epsilon))
 
   tic("Runtime")
+  
+  if (non.private) {
+    print("Non-Private")
+    nonprivate.out <- bergm.orig(formula,
+                        burn.in=burn.in, main.iters = main.iters, aux.iters = 0.1*choose(n,2),
+                        sigma.epsilon = sigma.epsilon,
+                        print.out=2500, nchains = 3)
     
-  print("Non-Private")
-  nonprivate.out <- bergm.orig(formula,
-                      burn.in=burn.in, main.iters = main.iters, aux.iters = 0.1*choose(n,2),
-                      sigma.epsilon = sigma.epsilon,
-                      print.out=2500, nchains = 3)
-    
-    
-    # run tests
-    outs <- list()
-    parallelCluster <- parallel::makeCluster(parallel::detectCores())
-
+  } else {
+    nonprivate.out <- NULL
+  }
+  
+  # setup up closure for parallel processing
+  test.run <- function(t) {
+    run.one.test(t, formula, n, dp.epsilon, dp.k, burn.in, main.iters, 
+                  sigma.epsilon, parallel)
+  }
+  
+  if (parallel) {
+    outs <- mclapply(as.list(1:num.tests), test.run)
+  } else {
+    # run tests sequentially
     for (t in 1:num.tests) {
-      tic()
-      print(sprintf("Test: %d", t))
-      nw.private <- make.private.restr(formula, dp.epsilon, dp.k, privacy.type="edge")
-      private.out <- bergm.modified.private(nw.private$formula, nw.private$noise,
-                                            burn.in=burn.in, main.iters = main.iters, aux.iters = 0.2*choose(n,2),
-                                            sigma.epsilon = sigma.epsilon,
-                                            print.out=1000, nchains = 3)
-      outs[[t]] <- private.out
-      toc()
+      outs <- list()
+      outs[[t]] <- test.run(t)
     }
-    toc()
+  }
+  
+  toc()
     
-    return(list("private"=outs, "nonprivate"=nonprivate.out, "true"=true.theta))
+  return(list("private"=outs, "nonprivate"=nonprivate.out, "true"=true.theta))
+}
+
+run.one.test <- function(t,
+                         formula, 
+                         n,
+                         dp.epsilon, 
+                         dp.k, 
+                         burn.in, 
+                         main.iters, 
+                         sigma.epsilon,
+                         parallel,
+                         print.out=2500,
+                         nchains = 3) {
+  
+  if (!parallel) {
+    print(sprintf("Test: %d", t))
+    tic()
+  }
+  nw.private <- make.private.restr(formula, dp.epsilon, dp.k, privacy.type="edge")
+  private.out <- bergm.modified.private(nw.private$formula, nw.private$noise,
+                                        burn.in=burn.in, main.iters = main.iters, aux.iters = 0.2*choose(n,2),
+                                        sigma.epsilon = sigma.epsilon,
+                                        print.out=1000, nchains = 3)
+  
+  if (!parallel) toc()
 }
 
 # tests <- run.inference.tests(nw ~ edges + gwesp(0.5, fixed=TRUE), n, true.theta, dp.k, dp.epsilon = 1.0)

@@ -12,6 +12,7 @@ library(Rglpk)
 library(Matrix)
 library(data.table)
 library(cowplot)
+library(parallel)
 
 #setwd("~/Documents/Harvard/Senior Year/Thesis/project/code")
 #setwd("/home/rstudio/dp-ergm-thesis/code")
