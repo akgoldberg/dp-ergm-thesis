@@ -15,9 +15,9 @@ source('libraries.R')
 # write.table(df.samples, file = sprintf("df.samples%d.txt",i), sep = ",", col.names = colnames(df.samples))
 
 sigma.epsilon = NULL
-if (i==1) sigma.epsilon=diag(c(0.025, 0.01))
-if (i==2) sigma.epsilon=diag(c(0.025, 0.0005))
-if (i==3) sigma.epsilon = diag(0.025, 0.001, 0.0001)
+if (i==1) sigma.epsilon=diag(c(0.0025, 0.001))
+if (i==2) sigma.epsilon=diag(c(0.0025, 0.00025))
+if (i==3) sigma.epsilon = diag(0.0025, 0.001, 0.0001)
 
 inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE), dp.epsilon, sigma.epsilon=sigma.epsilon)
 save(inference.tests, file=sprintf("inference.tests%d-eps%g", i, dp.epsilon))
