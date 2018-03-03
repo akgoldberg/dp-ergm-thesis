@@ -8,18 +8,29 @@
 setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
 #setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
 source('libraries.R')
-#i <- myargument
+
 # print(i)
 # samples <- load.samples(i)
 # df.samples <- run.noise.tests(samples, c(0.1, 0.5, 1.), dp.delta=1e-6, stop=1000) 
 # write.table(df.samples, file = sprintf("df.samples%d.txt",i), sep = ",", col.names = colnames(df.samples))
 
-sigma.epsilon = NULL
-if (i==1) sigma.epsilon=diag(c(0.0025, 0.001))
-if (i==2) sigma.epsilon=diag(c(0.0025, 0.00025))
-if (i==3) sigma.epsilon = diag(0.0025, 0.001, 0.0001)
-
-inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
-                                         dp.epsilon, sigma.epsilon=sigma.epsilon,
-                                         non.private=TRUE)
+if (i==1) {
+    sigma.epsilon=diag(c(0.0025, 0.001))
+    inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
+                                            dp.epsilon, sigma.epsilon=sigma.epsilon,
+                                            non.private=TRUE)
+}
+if (i==2) {
+    sigma.epsilon=diag(c(0.0025, 0.00025))
+    inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
+                                            dp.epsilon, sigma.epsilon=sigma.epsilon,
+                                            non.private=TRUE)
+}
+if (i==3) {
+    sigma.epsilon = diag(0.0025, 0.001, 0.0001)
+    inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE)+gwdsp(0.5,fixed=TRUE),
+                                            dp.epsilon, sigma.epsilon=sigma.epsilon,
+                                            non.private=TRUE)
+} 
+    
 save(inference.tests, file=sprintf("inference.tests%d-eps%g", i, dp.epsilon))
