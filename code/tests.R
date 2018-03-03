@@ -256,7 +256,7 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   true.theta <- samples$theta
 
   formula <- nonsimp.update.formula(formula.rhs, nw ~ ., from.new=TRUE)
-  print(sprintf("Running tests with n=%d, k=%d, eps=%g", n, dp.k, dp.epsilon))
+  print(sprintf("Running tests with sample=%d, n=%d, k=%d, eps=%g", samp.id, n, dp.k, dp.epsilon))
 
   tic("Runtime")
     
