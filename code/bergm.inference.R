@@ -63,9 +63,7 @@ bergm.modified.private <- function (formula,
   for (k in 1L:tot.iters) {
     if (k%%print.out == 0) {
       print(sprintf("Completed %d iterations. Thetas = %s", k, theta.to.str(theta)))
-      if (noise$method == "rr") {
-        print(sprintf("Edge difference is: %g", mean(edgediff.old)))
-      } else {
+      if (noise$method != "rr") {
         print(sprintf("Best guess of suff stats is now: %s", sstats.to.str(suffstats.old)))
       }
     }  

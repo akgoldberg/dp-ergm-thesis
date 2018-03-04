@@ -385,7 +385,7 @@ make.inference.testsdf.row <- function(x, model.id, test.num) {
     row$post.mean <- apply(x$Theta,c(2),mean)
     row$post.se <- getSE(x$Theta)
     names(row$post.mean) <- statnames
-    names(row$post.sd) <- statnames
+    names(row$post.se) <- statnames
     row$stat.value <- x$stats
     row$AR <- mean(x$AR)
     
