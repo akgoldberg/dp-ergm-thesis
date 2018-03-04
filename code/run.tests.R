@@ -21,7 +21,7 @@ if (i==1) {
                                             non.private=TRUE)
 }
 if (i==2) {
-    sigma.epsilon=diag(c(0.0025, 0.00025))
+    sigma.epsilon=diag(c(0.001, 0.0001))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
                                             dp.epsilon, sigma.epsilon=sigma.epsilon,
                                             non.private=TRUE)
@@ -33,4 +33,4 @@ if (i==3) {
                                             non.private=TRUE)
 } 
     
-save(inference.tests, file=sprintf("inference.tests%d%d-eps%g", i, dp.epsilon))
+save(inference.tests, file=sprintf("inference.tests%d-eps%g", i, dp.epsilon))
