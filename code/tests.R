@@ -317,7 +317,16 @@ run.one.test <- function(t,
                                         print.out=1000, nchains = 3)
   
   if (!parallel) toc()
+
+  return(private.out)
 }
+
+load.inference.tests <- function(i, dp.epsilon) {
+  fname = sprintf("inference.tests%d-eps%g", i, dp.epsilon)
+  load(fname)
+  return(inference.tests)
+}
+
 
 # tests <- run.inference.tests(nw ~ edges + gwesp(0.5, fixed=TRUE), n, true.theta, dp.k, dp.epsilon = 1.0)
 # tests0.loweps <- run.inference.tests(nw ~ edges + gwesp(0.5, fixed=TRUE) + gwdsp(0.5, fixed=TRUE), n, true.theta, dp.k, dp.epsilon = 0.5)

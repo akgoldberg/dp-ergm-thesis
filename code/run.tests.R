@@ -33,4 +33,4 @@ if (i==3) {
                                             non.private=TRUE)
 } 
     
-save(inference.tests, file=sprintf("inference.tests%d-eps%g", i, dp.epsilon))
+save(inference.tests, file=sprintf("inference.tests%d%d-eps%g", i, dp.epsilon))
