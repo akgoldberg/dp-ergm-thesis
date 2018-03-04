@@ -406,3 +406,9 @@ make.inference.testsdf.row <- function(x, model.id, test.num) {
     setnames(df.row, 1, "stat.name") 
     return(df.row)
 }
+
+getSE <- function(Theta.out) {
+  Theta.out <- 
+}
+
+

@@ -16,19 +16,19 @@ source('libraries.R')
 
 
 if (i==1) {
-    sigma.epsilon=diag(c(0.001, 0.0005))
+    sigma.epsilon=diag(c(0.0005, 0.00025))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
                                             dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
-                                            non.private=FALSE, parallel = FALSE)
+                                            non.private=FALSE)
 }
 if (i==2) {
-    sigma.epsilon=diag(c(0.001, 0.0001))
+    sigma.epsilon=diag(c(0.0005, 0.00025))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
                                             dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                             non.private=FALSE)
 }
 if (i==3) {
-    sigma.epsilon = diag(c(0.0025, 0.001, 0.0001))
+    sigma.epsilon = diag(c(0.0005, 0.00025, 0.00001))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE)+gwdsp(0.5,fixed=TRUE),
                                             dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                             non.private=FALSE)
