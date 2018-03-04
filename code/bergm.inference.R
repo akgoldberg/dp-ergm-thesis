@@ -63,7 +63,11 @@ bergm.modified.private <- function (formula,
   for (k in 1L:tot.iters) {
     if (k%%print.out == 0) {
       print(sprintf("Completed %d iterations. Thetas = %s", k, theta.to.str(theta)))
-      print(sprintf("Best guess of suff stats is now: %s", sstats.to.str(suffstats.old)))
+      if (noise$method == "rr") {
+        print(sprintf("Edge difference is: %g", mean(edgediff.old)))
+      } else {
+        print(sprintf("Best guess of suff stats is now: %s", sstats.to.str(suffstats.old)))
+      }
     }  
     for (h in 1L:nchains) {
       if (Clist$nstats > 1 && nchains > 1) {
@@ -84,7 +88,8 @@ bergm.modified.private <- function (formula,
                               control, 
                               verbose = FALSE)
 
-      delta <- z$s - noise$draw
+      delta <- z$s
+      if (noise$method != "rr") delta <- z$s - noise$draw
       
       suffstats <- stats0 + delta
 
@@ -106,7 +111,7 @@ bergm.modified.private <- function (formula,
       if (noise$method == "rr") {
         nw.sampled <- newnw.extract(y, z)
         edge.diff <- sum(abs(as.matrix(nw.sampled) - y.mat))/2.
-        beta.x <- beta.lik + (edge.diff - edge.diff.old[, h])*log(noise$p) 
+        beta.x <- beta.lik + (edge.diff - edge.diff.old[h])*log(noise$p) 
       } 
       else {
         beta.x <- beta.lik + (1./noise$level) %*% (abs(suffstats.old[, h] - as.vector(stats0)) - as.vector(abs(suffstats - stats0)))
@@ -115,7 +120,7 @@ bergm.modified.private <- function (formula,
       # replace current best guess of x
       if (beta.x >=  log(runif(1))) {
             suffstats.old[, h] <- suffstats
-            if (noise$method == "rr") edge.diff.old <- edge.diff
+            if (noise$method == "rr") edge.diff.old[h] <- edge.diff
       }
 
     }

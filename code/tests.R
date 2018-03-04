@@ -339,27 +339,70 @@ load.inference.tests <- function(i, method, dp.epsilon) {
   return(inference.tests)
 }
 
-get.summary.tests <- function(private.tests) {
-  num.tests <- length(private.tests)
-  test.summary <- rep(NA, num.tests)
-  for (i in 1:num.tests) {
-    x <- private.tests[[i]]
-    
-    # get acceptance rates
-    rates <- matrix(x$AR,x$nchains,1)
-    rownames(rates) <- paste("Chain",seq(1,x$nchains)," ")
-    colnames(rates) <- paste("Acceptance rate:")
-    rates <- as.table(rates)
-    
-    FF <- apply(x$Theta,2,cbind)
-    # get posterior sd and mean
-    overall <- rbind(apply(FF,2,mean),apply(FF,2,sd))
-    rownames(overall) <- c("Post. mean","Post. sd")
-    colnames(overall) <- paste("theta",seq(1,x$dim)," (",
-                               x$specs[seq(1,x$dim)],")",sep="")
-    all <- as.table(overall)
-    
-    test.summary[i] <- all
+# make a data frame with multiple methods and epsilons from inference tests
+make.inference.df <- function(model.id, methods=c("smooth", "restr"), dp.epsilons=c(1, 3)) {
+  df.out <- data.frame()
+  for (method in methods) {
+    for (dp.epsilon in dp.epsilons) {
+      df.out <- rbindlist(list(df.out, get.summary.inference.tests(model.id, method, dp.epsilon)),
+                          use.names=TRUE, fill=TRUE)
+    }
   }
-  return(test.summary)
+  return(df.out)
+}
+
+# Make raw test data into dataframe
+get.summary.inference.tests <- function(model.id, method, dp.epsilon) {
+  # load the tests for this model, method and epsilon value
+  tests <- load.inference.tests(model.id, method, dp.epsilon)
+  df.out <- data.frame("model.id"=numeric(), "method"=character(), "stat.name"=character(),
+                   "eps"=numeric(), "delta"=numeric(),
+                    "stat.value"=numeric(),  "AR"=numeric(),
+                   "post.mean"=numeric(), "post.sd"=character(),
+                   "noise.draw"=numeric(), "noise.level"=character())
+  # eps
+  if (!is.null(tests$nonprivate)) {
+    row.df <- make.inference.testsdf.row(tests$nonprivate, model.id, 0)
+    df.out <- rbindlist(list(df.out, row.df), use.names=TRUE, fill=TRUE)
+  }
+
+  for (t in 1:length(tests$private)) {
+    row.df <- make.inference.testsdf.row(tests$private[[t]],model.id, t)
+    df.out <- rbindlist(list(df.out, row.df), use.names=TRUE, fill=TRUE)
+  }
+  
+  return(df.out)
+}
+
+# make one row of test df
+make.inference.testsdf.row <- function(x, model.id, test.num) {
+    row <- list()
+    row$model.id <- model.id
+    row$test.num <- test.num
+    
+    # get non-private mean
+    statnames <- names(x$stats)
+    row$post.mean <- apply(x$Theta,c(2),mean)
+    row$post.sd <- apply(x$Theta,c(2),sd)
+    names(row$post.mean) <- statnames
+    names(row$post.sd) <- statnames
+    row$stat.value <- x$stats
+    row$AR <- mean(x$AR)
+    
+    # non-private test inference run
+    if (test.num == 0) {
+      row$method <- "nonprivate"
+    } 
+    # private test inference run
+    else {
+      row$method <- x$noise$method
+      row$eps <- x$noise$dp.epsilon
+      row$delta <- x$noise$dp.delta
+      row$noise.draw <- x$noise$draw
+      row$noise.level <- x$noise$level
+    }
+    df.row <- data.frame(row)
+    setDT(df.row, keep.rownames = TRUE)
+    setnames(df.row, 1, "stat.name") 
+    return(df.row)
 }
