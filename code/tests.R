@@ -333,12 +333,33 @@ run.one.test <- function(t,
   return(private.out)
 }
 
-load.inference.tests <- function(i, dp.epsilon) {
-  fname = sprintf("obj/inference.tests/inference.tests%d-eps%g", i, dp.epsilon)
+load.inference.tests <- function(i, method, dp.epsilon) {
+  fname = sprintf("obj/inference.tests/inference.tests%d%s-eps%g", i, method, dp.epsilon)
   load(fname)
   return(inference.tests)
 }
 
-
-# tests <- run.inference.tests(nw ~ edges + gwesp(0.5, fixed=TRUE), n, true.theta, dp.k, dp.epsilon = 1.0)
-# tests0.loweps <- run.inference.tests(nw ~ edges + gwesp(0.5, fixed=TRUE) + gwdsp(0.5, fixed=TRUE), n, true.theta, dp.k, dp.epsilon = 0.5)
+get.summary.tests <- function(private.tests) {
+  num.tests <- length(private.tests)
+  test.summary <- rep(NA, num.tests)
+  for (i in 1:num.tests) {
+    x <- private.tests[[i]]
+    
+    # get acceptance rates
+    rates <- matrix(x$AR,x$nchains,1)
+    rownames(rates) <- paste("Chain",seq(1,x$nchains)," ")
+    colnames(rates) <- paste("Acceptance rate:")
+    rates <- as.table(rates)
+    
+    FF <- apply(x$Theta,2,cbind)
+    # get posterior sd and mean
+    overall <- rbind(apply(FF,2,mean),apply(FF,2,sd))
+    rownames(overall) <- c("Post. mean","Post. sd")
+    colnames(overall) <- paste("theta",seq(1,x$dim)," (",
+                               x$specs[seq(1,x$dim)],")",sep="")
+    all <- as.table(overall)
+    
+    test.summary[i] <- all
+  }
+  return(test.summary)
+}
