@@ -247,7 +247,8 @@ visualize.noise.tests <- function(tests.id,
 ################################################################################
 
 run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.tests = 10,
-                               burn.in=10000, main.iters=10000, sigma.epsilon=NULL, parallel=TRUE, non.private=TRUE) {
+                               burn.in=10000, main.iters=10000, sigma.epsilon=NULL, parallel=TRUE, non.private=TRUE,
+                               method='restr') {
   
   
   samples <- load.samples(samp.id, start=n, stop=n)[[1]]
@@ -256,7 +257,7 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   true.theta <- samples$theta
 
   formula <- nonsimp.update.formula(formula.rhs, nw ~ ., from.new=TRUE)
-  print(sprintf("Running tests with sample=%d, n=%d, k=%d, eps=%g", samp.id, n, dp.k, dp.epsilon))
+  print(sprintf("Running %d tests with sample=%d, n=%d, k=%d, eps=%g, method=%s", num.tests, samp.id, n, dp.k, dp.epsilon, method))
 
   tic("Runtime")
   
@@ -274,12 +275,12 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   # setup up closure for parallel processing
   test.run <- function(t) {
     run.one.test(t, formula, n, dp.epsilon, dp.k, burn.in, main.iters, 
-                  sigma.epsilon, parallel)
+                  sigma.epsilon, parallel, method)
   }
   
   if (parallel) {
     num.cores <- min(num.tests+1, detectCores()-1)
-    print(sprintf("Using %d cores.", num.cores))
+    print(sprintf("Can use %d cores.", num.cores))
     outs <- mclapply(as.list(1:num.tests), test.run, mc.preschedule=FALSE, mc.cores	= num.cores)
   } else {
     # run tests sequentially
@@ -303,14 +304,25 @@ run.one.test <- function(t,
                          main.iters, 
                          sigma.epsilon,
                          parallel,
-                         print.out=2500,
+                         method,
+                         print.out = 2500,
                          nchains = 3) {
   
   print(sprintf("Test: %d", t))
   if (!parallel) {
     tic()
   }
-  nw.private <- make.private.restr(formula, dp.epsilon, dp.k, privacy.type="edge")
+  if (method == "smooth") {
+    dp.delta <- 1e-6
+    nw.private <- make.private.smooth(formula, dp.epsilon, dp.delta)
+  } 
+  if (method == "rr") {
+     nw.private <- make.private.rr(formula, dp.epsilon)
+  }
+  if (method == "restr") {
+     nw.private <- make.private.restr(formula, dp.epsilon, dp.k, privacy.type = "edge")
+  }
+  
   private.out <- bergm.modified.private(nw.private$formula, nw.private$noise,
                                         burn.in=burn.in, main.iters = main.iters, aux.iters = 0.2*choose(n,2),
                                         sigma.epsilon = sigma.epsilon,
@@ -322,7 +334,7 @@ run.one.test <- function(t,
 }
 
 load.inference.tests <- function(i, dp.epsilon) {
-  fname = sprintf("inference.tests%d-eps%g", i, dp.epsilon)
+  fname = sprintf("obj/inference.tests/inference.tests%d-eps%g", i, dp.epsilon)
   load(fname)
   return(inference.tests)
 }

@@ -5,8 +5,8 @@
       eval(parse(text=args[[k]]))
 }
 
-setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
-#setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
+#setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
+setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
 source('libraries.R')
 
 # print(i)
@@ -17,20 +17,20 @@ source('libraries.R')
 if (i==1) {
     sigma.epsilon=diag(c(0.001, 0.0005))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
-                                            dp.epsilon, sigma.epsilon=sigma.epsilon,
-                                            non.private=TRUE)
+                                            dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
+                                            non.private=FALSE)
 }
 if (i==2) {
     sigma.epsilon=diag(c(0.001, 0.0001))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE),
-                                            dp.epsilon, sigma.epsilon=sigma.epsilon,
-                                            non.private=TRUE)
+                                            dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
+                                            non.private=FALSE)
 }
 if (i==3) {
     sigma.epsilon = diag(c(0.0025, 0.001, 0.0001))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE)+gwdsp(0.5,fixed=TRUE),
-                                            dp.epsilon, sigma.epsilon=sigma.epsilon,
-                                            non.private=TRUE)
+                                            dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
+                                            non.private=FALSE)
 } 
     
-save(inference.tests, file=sprintf("inference.tests%d-eps%g", i, dp.epsilon))
+save(inference.tests, file=sprintf("inference.tests%d%s-eps%g", i, method, dp.epsilon))
