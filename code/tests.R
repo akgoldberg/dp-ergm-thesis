@@ -383,7 +383,7 @@ make.inference.testsdf.row <- function(x, model.id, test.num) {
     # get non-private mean
     statnames <- names(x$stats)
     row$post.mean <- apply(x$Theta,c(2),mean)
-    row$post.sd <- apply(x$Theta,c(2),sd)
+    row$post.se <- getSE(x$Theta)
     names(row$post.mean) <- statnames
     names(row$post.sd) <- statnames
     row$stat.value <- x$stats
@@ -407,8 +407,11 @@ make.inference.testsdf.row <- function(x, model.id, test.num) {
     return(df.row)
 }
 
+# compute standard error
 getSE <- function(Theta.out) {
-  Theta.out <- 
+  sd <- apply(Theta.out, 2, sd)
+  eff.size <- apply(apply(Theta.out, 3, effectiveSize), 2, sum)
+  return(sd/eff.size)
 }
 
 
