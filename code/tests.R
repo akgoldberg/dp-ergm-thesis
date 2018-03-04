@@ -305,7 +305,7 @@ run.one.test <- function(t,
                          sigma.epsilon,
                          parallel,
                          method,
-                         print.out = 2500,
+                         print.out = 1000,
                          nchains = 3) {
   
   print(sprintf("Test: %d", t))
@@ -326,7 +326,7 @@ run.one.test <- function(t,
   private.out <- bergm.modified.private(nw.private$formula, nw.private$noise,
                                         burn.in=burn.in, main.iters = main.iters, aux.iters = 0.2*choose(n,2),
                                         sigma.epsilon = sigma.epsilon,
-                                        print.out=1000, nchains = 3)
+                                        print.out=print.out, nchains = 3)
   
   if (!parallel) toc()
 
