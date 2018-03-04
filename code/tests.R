@@ -278,7 +278,8 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   }
   
   if (parallel) {
-    outs <- mclapply(as.list(1:num.tests), test.run)
+    print(sprintf("Using %d cores.", detectCores()-1))
+    outs <- mclapply(as.list(1:num.tests), test.run, mc.cores	= detectCores()-1)
   } else {
     # run tests sequentially
     for (t in 1:num.tests) {
@@ -304,8 +305,8 @@ run.one.test <- function(t,
                          print.out=2500,
                          nchains = 3) {
   
+  print(sprintf("Test: %d", t))
   if (!parallel) {
-    print(sprintf("Test: %d", t))
     tic()
   }
   nw.private <- make.private.restr(formula, dp.epsilon, dp.k, privacy.type="edge")
