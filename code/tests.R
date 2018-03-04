@@ -278,8 +278,9 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   }
   
   if (parallel) {
-    print(sprintf("Using %d cores.", detectCores()-1))
-    outs <- mclapply(as.list(1:num.tests), test.run, mc.cores	= detectCores()-1)
+    num.cores <- min(num.tests+1, detectCores()-1)
+    print(sprintf("Using %d cores.", num.cores))
+    outs <- mclapply(as.list(1:num.tests), test.run, mc.preschedule=FALSE, mc.cores	= num.cores)
   } else {
     # run tests sequentially
     for (t in 1:num.tests) {
