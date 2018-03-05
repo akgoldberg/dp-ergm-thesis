@@ -71,8 +71,8 @@ generate.samples <- function(samp.id, start=100, stop=1000, theta=NULL, verbose=
     tic(sprintf("Sample n=%d", n))
     tic(sprintf("n=%d - sampling", n))
     print(sprintf("Starting sample with %d nodes...", n))
-    p <- log(n)/(theta1.factor*n)
-    # theta[1] <- log(p/(1-p))
+    p <- log(300)/(2*300)
+    theta[1] <- log(p/(1-p))
     samp <- sample_ergm(n, theta, 50, verbose=verbose)
     print(sprintf("Samples have avg. edges: %g, max degree: %d, max shared partners: %d", mean(samp$edge), max(samp$deg), max(samp$sp)))
     toc()
@@ -138,8 +138,8 @@ load.samples <- function(samp.id, start=100, stop=1000) {
 # theta1.factor <- 2.
 # theta1 <- 0.
 # theta2 <- 2.0
-# theta3 <- -2.0
-# theta4 <- 0.1
+# theta3 <- 2.0
+# theta4 <- -0.5
 # theta <- c(theta1, theta2, theta3, theta4)
 # generate.samples(5, theta=theta)
 

@@ -334,14 +334,25 @@ run.one.test <- function(t,
 }
 
 load.inference.tests <- function(i, method, dp.epsilon) {
-  fname = sprintf("obj/inference.tests/inference.tests%d%s-eps%g", i, method, dp.epsilon)
-  load(fname)
-  return(inference.tests)
+  if (method=="nonprivate") {
+    fname = sprintf("obj/inference.tests/nonprivate%d", i)
+    load(fname)
+    return(nonprivate)
+  } else {
+    fname = sprintf("obj/inference.tests/inference.tests%d%s-eps%g", i, method, dp.epsilon)
+    load(fname)
+    return(inference.tests)
+  } 
 }
 
 # make a data frame with multiple methods and epsilons from inference tests
 make.inference.df <- function(model.id, methods=c("smooth", "restr"), dp.epsilons=c(1, 3)) {
   df.out <- data.frame()
+  
+  # get nonprivate df
+  nonpriv.df <- make.inference.testsdf.row(load.inference.tests(model.id, "nonprivate"), model.id, 0)
+  df.out <- rbindlist(list(df.out, nonpriv.df), use.names=TRUE, fill=TRUE)
+  
   for (method in methods) {
     for (dp.epsilon in dp.epsilons) {
       df.out <- rbindlist(list(df.out, get.summary.inference.tests(model.id, method, dp.epsilon)),
@@ -358,13 +369,8 @@ get.summary.inference.tests <- function(model.id, method, dp.epsilon) {
   df.out <- data.frame("model.id"=numeric(), "method"=character(), "stat.name"=character(),
                    "eps"=numeric(), "delta"=numeric(),
                     "stat.value"=numeric(),  "AR"=numeric(),
-                   "post.mean"=numeric(), "post.sd"=character(),
+                   "post.mean"=numeric(), "post.se"=character(),
                    "noise.draw"=numeric(), "noise.level"=character())
-  # eps
-  if (!is.null(tests$nonprivate)) {
-    row.df <- make.inference.testsdf.row(tests$nonprivate, model.id, 0)
-    df.out <- rbindlist(list(df.out, row.df), use.names=TRUE, fill=TRUE)
-  }
 
   for (t in 1:length(tests$private)) {
     row.df <- make.inference.testsdf.row(tests$private[[t]],model.id, t)
@@ -410,8 +416,15 @@ make.inference.testsdf.row <- function(x, model.id, test.num) {
 # compute standard error
 getSE <- function(Theta.out) {
   sd <- apply(Theta.out, 2, sd)
-  eff.size <- apply(apply(Theta.out, 3, effectiveSize), 2, sum)
+  eff.size <- apply(apply(Theta.out, 3, effectiveSize), 1, sum)
   return(sd/eff.size)
+}
+
+extract.nonprivate <- function(i) {
+  tests <- load.inference.tests(i, "restr", 1.)
+  nonprivate <- tests$nonprivate
+  fname = sprintf("obj/inference.tests/nonprivate%i", i)
+  save(nonprivate, file=fname)
 }
 
 
