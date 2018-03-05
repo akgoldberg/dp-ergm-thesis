@@ -25,5 +25,11 @@ if (i==3) {
                                             dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                             non.private=FALSE, num.tests=25)
 } 
+if (i==5) {
+    sigma.epsilon = diag(c(0.0005, 0.00025, 0.00025, 0.00001))
+    inference.tests <- run.inference.tests(i, 300, ~edges+altkstar(0.5, fixed=TRUE)+gwesp(0.5, fixed=TRUE)+gwdsp(0.5,fixed=TRUE),
+                                            dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
+                                            non.private=TRUE, num.tests=25)
+} 
     
 save(inference.tests, file=sprintf("inference.tests%d%s-eps%g", i, method, dp.epsilon))
