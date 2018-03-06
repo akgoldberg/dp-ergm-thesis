@@ -21,3 +21,4 @@ rand.response.nw <- function(nw, p) {
   nw.new <- network(nw.mat, directed = FALSE)
   return(nw.new)
 } 
+

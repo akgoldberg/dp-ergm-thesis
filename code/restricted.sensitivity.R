@@ -217,4 +217,19 @@ projection.node <- function(nw, dp.k) {
   return(list("y" = y, "d.hat" = d.hat, "lp" = LP))
 }
 
+private.labels <- function(nw, eps) {
+  # generate histogram of labels
+  nw <- faux.mesa.high
+  label.df <- subset(rbindlist(lapply(nw$val, data.frame)), select= -na)
+  label.df <- data.frame(table(label.df))
+  
+  # add noise
+  noisyFreq <- label.df$Freq + rlaplace(n=dim(label.df)[1], scale=2.)
+  postproc <- sapply(round(noisyFreq), max, 0)
+  names(postproc) <-"Noisy.Freq.Fixed"
+  names(noisyFreq) <- "Noisy.Freq"
+  label.df <- cbind(label.df, noisyFreq, postproc)
+  return(label.df)
+  # make nw
+}
 

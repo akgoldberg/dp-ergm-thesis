@@ -14,6 +14,7 @@ library(data.table)
 library(cowplot)
 library(parallel)
 library(coda)
+library(plyr)
 
 source('nw.helpers.R')
 source('restricted.sensitivity.R')
