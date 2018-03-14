@@ -3,7 +3,8 @@
 #####################################################################
 
 # Project the network to H_k and add noise to suff stats
-make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge", dp.delta=NULL, proj=TRUE) {
+make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
+                                 dp.delta=NULL, proj=TRUE, labels.priv=FALSE) {
   # project network to H_k
   # get original network
   y.orig <- ergm.getnetwork(formula)
@@ -25,7 +26,8 @@ make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge", 
  
   model <- ergm.getmodel(formula, y)
   # draw laplace noise
-  noise <- draw.lap.noise.restricted(model$terms, dp.epsilon, dp.k, privacy.type, dp.delta, d.hat)
+  noise <- draw.lap.noise.restricted(model$terms, dp.epsilon, dp.k, privacy.type,
+                                     dp.delta, d.hat, labels.priv=labels.priv)
   noise$dp.epsilon <- dp.epsilon
   if (privacy.type == "node") noise$dp.delta <- dp.delta
   noise$dp.k <- dp.k
@@ -38,12 +40,14 @@ make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge", 
 ################################################################################
 
 # Draw Laplace noise under restricted sensitivty
-draw.lap.noise.restricted <- function(terms, dp.epsilonTot, dp.k, privacy.type, dp.deltaTot=NULL, d.hat=NULL) {
+draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
+                                      dp.k, privacy.type, labels.priv=FALSE,
+                                      dp.deltaTot=NULL, d.hat=NULL) {
   
   # output vector of level of laplace noise to add
-  noise.level <- rep(NA, length(terms))
+  noise.level <- rep(NA,  length(unlist(lapply(terms, function(x) {x$coef.names}))))
   # split epsilon evenly between terms if it is given as scalar
-  if (length(dp.epsilonTot == 1)) {
+  if (length(dp.epsilonTot) == 1) {
     dp.epsilon <- rep(dp.epsilonTot/length(terms), length(terms))
   } else {
     if (length(dp.epsilonTot) != length(terms)) {
@@ -52,6 +56,7 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot, dp.k, privacy.type, 
     }
     dp.epsilon <- dp.epsilonTot
   }
+  print(dp.epsilon)
 
   # split delta evenly between terms if it is given as scalar
   if (privacy.type == "node") {
@@ -65,31 +70,7 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot, dp.k, privacy.type, 
         }
         dp.delta <- dp.deltaTot
       }
-  }
 
-
-  # calculate amount of noise to add for each term
-  for (t in 1L:length(terms)) {
-    name <- terms[[t]]$name
-    param <- tail(terms[[t]]$inputs, 1)
-    # edge-level privacy
-    if (privacy.type == 'edge') {
-      if (name == 'edges') {
-        noise.level[[t]] <- 1/dp.epsilon[t]
-      }
-      if (name == 'altkstar') {
-        noise.level[[t]] <- (2*(1./param))/dp.epsilon[t]
-      }
-      if (name == 'gwesp') {
-        noise.level[[t]] <- 3*(2*(dp.k-1) + 1./param)/dp.epsilon[t]
-      }
-      if (name == 'gwdsp') {
-        noise.level[[t]] <- 3*(2*(dp.k-1))/dp.epsilon[t]
-      }
-    }
-
-    # node-level privacy
-    if (privacy.type == 'node') {
       # restricted sensitivity is computed over H_2k
       dp.k <- 2*dp.k
 
@@ -102,22 +83,75 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot, dp.k, privacy.type, 
         g <- 5
       }
       C <- g*exp(beta*d.hat/4.)
+  }
+
+  # calculate amount of noise to add for each term
+  i <- 1
+  for (t in 1L:length(terms)) {
+    name <- terms[[t]]$name
+    param <- tail(terms[[t]]$inputs, 1)
+    num.terms <- length(terms[[t]]$coef.names)
+    
+    # edge-level privacy s
+    if (privacy.type == 'edge') {
       if (name == 'edges') {
-        noise.level[[t]] <- 2*C*dp.k/dp.epsilon[t]
+        noise.level[i] <- 1/dp.epsilon[t]
       }
       if (name == 'altkstar') {
-        noise.level[[t]] <- 2*C*(3*dp.k*(1./param))/dp.epsilon[t]
+        noise.level[i] <- (2*(1./param))/dp.epsilon[t]
       }
       if (name == 'gwesp') {
-        noise.level[[t]] <- 2*C*((dp.k**2) + ((1./param) - 1))/dp.epsilon[t]
+        noise.level[i] <- 3*(2*(dp.k-1) + 1./param)/dp.epsilon[t]
       }
       if (name == 'gwdsp') {
-        noise.level[[t]] <-  2*C*(dp.k**2)
+        noise.level[i] <- 3*(2*(dp.k-1))/dp.epsilon[t]
+      }
+      # label-dependant terms
+      if (name == 'nodematch') {
+        if (!labels.priv) {
+          noise.level[i:(i+num.terms)] <- 1/dp.epsilon[t]
+        } else {
+          noise.level[i:(i+num.terms)] <- 3*dp.k/dp.epsilon[t]
+        }
+      } 
+      if (name == 'nodefactor') {
+        if (!labels.priv) {
+          noise.level[i:(i+num.terms)] <- 2/dp.epsilon[t]
+        } else {
+          noise.level[i:(i+num.terms)] <- 3*2*dp.k/dp.epsilon[t]
+        }
       }
     }
+
+    # node-level privacy structural terms
+    if (privacy.type == 'node') {
+
+      if (name == 'edges') {
+        noise.level[i] <- 2*C*dp.k/dp.epsilon[t]
+      }
+      if (name == 'altkstar') {
+        noise.level[i] <- 2*C*(3*dp.k*(1./param))/dp.epsilon[t]
+      }
+      if (name == 'gwesp') {
+        noise.level[i] <- 2*C*((dp.k**2) + ((1./param) - 1))/dp.epsilon[t]
+      }
+      if (name == 'gwdsp') {
+        noise.level[i] <-  2*C*(dp.k**2)
+      }
+      # label-dependant terms
+      if (name == 'nodematch') {
+          noise.level[i:(i+num.terms)] <- C*dp.k/dp.epsilon[t]
+      } 
+      if (name == 'nodefactor') {
+          noise.level[i:(i+num.terms)] <- C*dp.k/dp.epsilon[t]
+      }
+    }
+    
+    i <- i+num.terms
   }
   # draw Laplace noise to use
-  noise.draw <- rlaplace(n = length(terms), scale = noise.level)
+  print(noise.level)
+  noise.draw <- rlaplace(n = length(noise.level), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))
 }
 
@@ -148,7 +182,6 @@ projection.edge <- function(nw, dp.k) {
   }
   return(nw)
 }
-
 
 
 # projection into H_k for node-level privacy

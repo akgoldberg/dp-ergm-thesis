@@ -1,19 +1,15 @@
 
-An increasingly popular approach in quantitative analysis of networks is to fit statistical models to real world network data. Many of these models have generative interpretations, allowing researchers to understand the relative importance of multiple endogenous processes to the resulting structure of the network. The advantage of such an approach is best illustrated in contrast to computing statistics -- like degree distributions, assortativity coefficients, and transitivity coefficients -- to describe the network structure, without an explicit model of the network. While such metrics are incredibly useful in describing the structural properties of a given network, they cannot tease out the underlying processes that may give rise to such structures. 
+An increasingly popular approach in quantitative analysis of networks is to fit statistical models to realized network data. Many of these models have generative interpretations, allowing researchers to understand the relative importance of multiple endogenous processes to the resulting structure of the network. The advantage of such an approach is best illustrated in contrast to computing statistics -- like degree distributions or clustering coefficients -- to describe the network structure, without an explicit model of the network. While such metrics are useful in summarizing the structural properties of a given network, they cannot tease out the underlying processes that may give rise to such structures. 
 
-For example, one of the distinguishing characteristics of many real-world social networks is that they tend to have more triangles (sets of three connected nodes) than would be expected by drawing random edges of a graph \cite{GKM09}. However, there are a number of different processes in the formation of a friend network that could give rise to this outcome. One potential explanation is the notion of ``triangle closure,'' or the tendency for people to become friends with friends-of-friends, since they are easier to meet. Another, subtly different explanation, is that triangles arise out of ``assortative matching,'' the propensity for people with the same attributes to become friends with one another, leading to more clustering in the network. Finally, a high number of triangles in a social network could arise for reasons of ``sociality,''  the presence of only a few highly social individuals in the network, who are mutual friends to many people.
+For example, one of the distinguishing characteristics of many real-world social networks is the tendency to have more triangles (sets of three connected nodes) than would be expected by drawing random edges of a graph \cite{GKM09}. There are a number of different processes in the formation of a friend network that could give rise to this outcome. One potential explanation is the notion of ``triangle closure,'' or the tendency for people to become friends with friends-of-friends, since they are easier to meet. Another subtly different explanation is that triangles arise out of ``assortative matching,'' the propensity for people with the same attributes to become friends with one another, leading to clustering in the network. Finally, a high number of triangles in a social network could arise for reasons of ``sociality,''  the presence of only a few highly social individuals in the network, who are mutual friends to many people.
 
-In order to consider what global or local processes best explain particular structures of a network, a statistical model of network data posits a probability distribution over the space of possible graphs (usually graphs with a fixed number of nodes.) The goal of inference over this distribution is to tune parameters of the distribution, such that the realized network is likely to be observed under the probability distribution. 
+In order to consider what global or local processes best explain particular structures of a network, a statistical model of network data posits a probability distribution over the space of possible networks. The goal of inference  is to tune parameters of the distribution, such that the realized network is likely to be observed under the probability distribution. 
 
-A simple example of such a model is the Erd\"{o}s-R\'{e}nyi Random Graph Model, known as the $G(n,p)$ model, which proposes that edges are drawn independently with probability $p$ between any two nodes of a network with $n$ nodes. While this model has been studied in great depth by graph theorists, it does not capture many important features of real world networks, like the tendency for clustering or the power-law distribution of degrees of a graph, the pattern of many low-degree nodes and a few high-degree nodes.   
-
-In order to model more complicated structures in networks, a more general class of random graph models are Exponential Random Graph Models (sometimes known as $p^*$ models), which we describe in \Cref{sec:ergms}.  While these models arose out of the sociology literature, particularly in studying social networks, they have been applied to a broad range of problems, including analysis of interactions between proteins in the human body \cite{EBB10}, networks of neurons in the brain as people age  \cite{Sin+16}, corporate management structures at Enron  \cite{UHH13}, and the demographics of high school friendships \cite{GKM09}. Thus, we study the specific ERGM model described in \ref{sec:alt_stats}, both because it is one of the most widely used and generally applicable random graph models in practical network analysis and because, as we will see, it has robustness properties that motivate its amenability to analysis under differential privacy constraints.
+A simple example of such a model is the Erd\"{o}s-R\'{e}nyi Random Graph Model, known as the $G(n,p)$ model, which proposes that edges are drawn independently with probability $p$ between any two nodes of a network with $n$ nodes. While this model has been studied in great depth by graph theorists, it does not capture many important features of real world networks, like the tendency for clustering or the power-law distribution of degrees. In order to model such structures in networks, a more general class of random graph models are Exponential Random Graph Models. While these models arose out of the sociology literature, particularly in studying social networks, they have been applied to a broad range of problems, including analysis of interactions between proteins in the human body \cite{EBB10}, networks of neurons in the brain as people age  \cite{Sin+16}, corporate management structures at Enron  \cite{UHH13}, and the demographics of high school friendships \cite{GKM09}. 
 
 \section{Exponential Random Graph Models}\label{sec:ergms}
 
-Formally, a graph $G = (V,E)$ is defined by a set of vertices (or nodes) $V$, with $|V| = n$ and edges $E$, denoting the presence or absence of relationships between nodes. We will use the ``adjacency matrix'' representation of a graph, which we denote $x$, where $x_{ij} = 1$ if an edge exists between nodes $i$ and $j$ and $x_{ij} = 0$ otherwise.  The models we consider are all defined over \emph{undirected graphs}, so all the edges are bidirectional, and the adjacency matrix is therefore symmetric. Further, we consider graphs without self-loops, so that $x_{ii} = 0$ for all $i$.
-
- We refer to the number of edges adjacent to node $i$ as the \emph{degree} of node $i$ so $d_i = \sum_{j=1}^{n} x_{ij}$. Then, then the \emph{degree distribution} of graph $x$ is $D = (D_0,...,D_{n-1})$ where $D_k = |\{i \in V : d_i = k \}|$.
+Formally, a graph $G = (V,E)$ is defined by a set of nodes (or vertices) $V$, with $|V| = n$ and edges $E$, representing the presence or absence of relationships between nodes. We will use the ``adjacency matrix'' representation of a graph, which we denote $x$, where $x_{ij} = 1$ if an edge exists between nodes $i$ and $j$ and $x_{ij} = 0$ otherwise.  The models we consider are defined over undirected graphs, where all the edges are bidirectional, and the adjacency matrix is therefore symmetric. We refer to the number of edges adjacent to node $i$ as the \emph{degree} of node $i$ so $d_i = \sum_{j=1}^{n} x_{ij}$. Then, the \emph{degree distribution} is $D = (D_0,...,D_{n-1})$ where $D_k = |\{i \in V : d_i = k \}|$.
 
 \begin{definition}[Exponential Random Graph \cite{WS96}]
 \label{def:ergm_defn}
@@ -22,16 +18,16 @@ A probability distribution over graphs of $n$ vertices belongs to the family of 
 %\label{eq:ergm}
 \Pr(x | \theta) = \exp\left\{\theta^T u(x) - \psi(\theta)  \right\}
 \end{align*}
-where $\theta$ is a vector of parameters of the model, $u(x)$ is a vector of arbitrary sufficient statistics computed on graph $x$, and $\psi(\theta)$ is a normalization constant needed to ensure a valid probability distribution that integrate to one so that
+where $\theta$ is a vector of parameters of the model, $u(x)$ is a vector of sufficient statistics computed on graph $x$, and $\psi(\theta)$ is a normalization constant needed to ensure a valid probability distribution so:
 \begin{align*}
 %\label{eq:ergm_norm_constant}
-\psi(\theta) = \log \sum_x \exp\left\{\theta^T u(x) \right\}
+\psi(\theta) = \log \sum_{x'} \exp\left\{\theta^T u(x') \right\}
 \end{align*}
 \end{definition}
 
- One advantage to this model is that it belongs to the  \emph{exponential family} of probability distributions, for which inference techniques are well studied in the statistics and machine learning literature. In general, the normalization constant $\psi(\theta)$ may be intractable to compute exactly since it requires summing over the space of all possible graphs on $n$ vertices. Therefore, in practice, approximate inference methods, in particular sampling-based MCMC approaches, are used for parameter estimation of these models on realized data. 
+%  One advantage to this model is that it belongs to the  \emph{exponential family} of probability distributions, for which inference techniques are well studied in the statistics and machine learning literature. In general, the normalization constant $\psi(\theta)$ may be intractable to compute exactly since it requires summing over the space of all possible graphs on $n$ vertices. Therefore, in practice, approximate inference methods, in particular sampling-based MCMC approaches, are used for parameter estimation of these models on realized data. 
  
- A further advantage of ERGMs, is that they describe a broad range of random graph models, with varying conditional dependence relationships between edges.  For instance, the $G(n,p)$ graph we discussed can be viewed as an ERGM:
+ERGMs  describe a broad class of random graphs, with varying conditional dependence relationships between edges.  For instance, the $G(n,p)$ graph can be viewed as an ERGM:
  
  \begin{example}[$G(n,p)$ graphs]
  	\label{ex:ER_model}
@@ -40,7 +36,6 @@ where $\theta$ is a vector of parameters of the model, $u(x)$ is a vector of arb
  \theta = \log \frac{p}{1-p}$$ %\text{, } \quad 
   $$\psi(\theta)  = -\binom{n}{2} \log(1-p) = -\binom{n}{2} \log \frac{e^{-\theta}}{1+ e^{-\theta}}
   $$
-  
   Then, 
   \begin{align*}
     \Pr(x|\theta) & = \exp\left\{ |E| \log \frac{p}{1-p} + \binom{n}{2} \log(1-p)  \right\}  \\
@@ -50,7 +45,7 @@ where $\theta$ is a vector of parameters of the model, $u(x)$ is a vector of arb
   so each possible edge is included independently with probability $p$ as specified by the Erd\"{o}s-R\'{e}nyi Model.
  \end{example}
 
-In order to model the emergence of more complex structures in a network, sociologists have proposed various sufficient statistics of ERGMs that permit more general conditional independence assumptions than the Erd\"{o}s-R\'{e}nyi Model (which has the most restrictive independence assumption that any two edges are conditionally independent given the rest of the graph.) For instance, Frank and Strauss \cite{FS86} consider ``Markov'' graphs, where two possible edges in a graph may be conditionally dependent given the rest of the graph if they share a common endpoint. The intuition behind this independence assumption is that the probabilities of any two different relationships formed in a network are only related through a shared individual who formed these relationships. By permitting such dependencies, it is possible to model node level effects on edge formation. Frank and Strauss showed that all Markov graphs can be described by ERGMs of the following form:
+In order to model more complex structures in a network,  researchers have proposed higher order sufficient statistics of ERGMs that imply more general conditional independence assumptions than the Erd\"{o}s-R\'{e}nyi Model. For instance,  ``Markov'' graphs, allow the probabilities of any two possible edges in a graph to be conditionally dependent if the edges share a common endpoint. This dependency allows for node level effects on edge formation. In fact, Markov dependencies are captured by ERGMs of the following form:
 
 \begin{example}[Markov graphs \cite{FS86}]
 \label{ex:markov_graphs}
@@ -65,22 +60,20 @@ where the sufficient statistics are
 &\text{number of $k$-stars } (k \geq 2): & S_k(x)  & = \sum_{i=1}^{n-1} \binom{i}{k} D_i(x)\\
 &\text{number of triangles: } & T(x) & = \sum_{1 \leq h < i < j < \leq n} x_{hi} x_{ij} x_{hj}
 \end{align*}
-and the parameters are $\{\theta_k\}_{k=1}^{n}$ and $\tau$.\footnote{Note that setting $\theta_2 = ...= \theta_k = \tau = 0$ in the Markov model, we recover the $G(n,p)$ model, which is an instance of a Markov graph $G(n,p)$ since any two edges are conditionally independent in the $G(n,p)$ model.}
+and the parameters are $\{\theta_k\}_{k=1}^{n}$ and $\tau$.\footnote{Note that setting $\theta_2 = ...= \theta_k = \tau = 0$ in the Markov model, we recover the $G(n,p)$ model, which is an instance of a Markov graph since any two edges are conditionally independent in the $G(n,p)$ model.}
 \end{example}
 
-In practice, neither the $G(n,p)$ model nor the full Markov graph model are frequently used for inference over real-world data. As explained above, the $G(n,p)$ model fails to capture complex dependencies between edges in a network. More general Markov models suffer from poor statistical properties making them generally unsuitable for inference over real world networks.
+%First, graphs instances of the general Markov graph model are susceptible to \emph{model degeneracy}, where we refer to a probability distribution as degenerate if its mass is concentrated on a small subset of the space of possible graphs. For instance, consider the Markov graph  with sufficient statistics $S_1$ and $T$ (so $\theta_k = 0$ for $k \geq 2$). If we take $\theta_1 > 0$ and let $\tau$ be fairly large and positive, then this model puts almost all of its mass on the complete graph or nearly complete graphs, since the term in the exponent is extremely large for such graphs, as there are $\binom{n}{3}$ possible triangles. In fact, for $\tau > 0$, this model asymptotically (as $n \to \infty$) results in only three possible distributions: (1) all probability mass on the complete graph, (2) the $G(n,p)$ graph model or (3) a mixture distribution with some probability of the complete graph and some of $G(n,p)$ graphs \cite{Jon99}. Thus, because we do not expect most interesting real world social or biological networks to be complete or $G(n,p)$ graphs, this model in its current form is not conducive to modeling real world networks.
 
-First, graphs instances of the general Markov graph model are susceptible to \emph{model degeneracy}, where we refer to a probability distribution as degenerate if its mass is concentrated on a small subset of the space of possible graphs. For instance, consider the Markov graph  with sufficient statistics $S_1$ and $T$ (so $\theta_k = 0$ for $k \geq 2$). If we take $\theta_1 > 0$ and let $\tau$ be fairly large and positive, then this model puts almost all of its mass on the complete graph or nearly complete graphs, since the term in the exponent is extremely large for such graphs, as there are $\binom{n}{3}$ possible triangles. In fact, for $\tau > 0$, this model asymptotically (as $n \to \infty$) results in only three possible distributions: (1) all probability mass on the complete graph, (2) the $G(n,p)$ graph model or (3) a mixture distribution with some probability of the complete graph and some of $G(n,p)$ graphs \cite{Jon99}. Thus, because we do not expect most interesting real world social or biological networks to be complete or $G(n,p)$ graphs, this model in its current form is not conducive to modeling real world networks.
+%Second, Markov graph models often suffer from \emph{inferential degeneracy}, or the existence of many parameters that could maximize the likelihood $\Pr(x | \theta, \tau)$. As a simple example of such an issue, consider the case where the maximum degree of the graph is bounded by some $k < n-1$ so that there are no $(k+1)$-stars, but the model contains $S_{k+1}(x)$ as sufficient statistics and a corresponding parameter $\theta_{k+1}$. Then the parameter $\theta_{k+1}$ could take on any value without changing the likelihood, so common techniques for maximum likelihood estimation may fail to converge. \cite{Han03}. 
 
-Second, Markov graph models often suffer from \emph{inferential degeneracy}, or the existence of many parameters that could maximize the likelihood $\Pr(x | \theta, \tau)$. As a simple example of such an issue, consider the case where the maximum degree of the graph is bounded by some $k < n-1$ so that there are no $(k+1)$-stars, but the model contains $S_{k+1}(x)$ as sufficient statistics and a corresponding parameter $\theta_{k+1}$. Then the parameter $\theta_{k+1}$ could take on any value without changing the likelihood, so common techniques for maximum likelihood estimation may fail to converge. \cite{Han03}. 
+%Lastly, the high sensitivity of the likelihood of general Markov graph models to addition or removal of edges makes common inference techniques challenging. As explained earlier, due to the intractability of computing the normalizing constant $\psi(\theta)$, sampling based inference methods are generally employed to perform inference over ERGMs. Roughly speaking, such methods proceed by sampling edges of a network in turn, holding the other edges constant, as repeating this procedure defines a Markov chain that converges asymptotically to the true distribution. At each sampling step, there is some probability of adding an edge to the graph which should be drawn according to the desired distribution. Now, because edges exhibit conditional dependencies, the addition of one edge may increase the probability of another edge being added to the graph. The difficulty with the specification of ERGMs given in $\Cref{ex:markov_graphs}$ is that the likelihood can be highly sensitive to the addition or removal of an edge. For instance, including high-order $k$-stars all with positive $\theta$, then for every additional edge added to a high degree node, the change to the likelihood grows exponentially since a $d$-degree node has $\binom{d}{k}$, $k$-stars. Thus, applying sampling based procedures to these Markov graph models tends to lead to ``avalanche'' effects -- as we add edges the conditional probability of other edges explosively increases, leading to convergence to the complete graph \cite{Sni+06}. In fact, this is related to the issue of model degeneracy, since most of the probability mass of the distribution is on the complete graph. Thus, alternative models aim to use sufficient statistics that have smaller impact on the sufficient statistics and thus the likelihood of the model. This notion of robustness of the sufficient statistics to addition or removal of edges is closely related to differential privacy, suggesting that the subsequent model may be amenable to use under differential privacy constraints.
 
-Lastly, the high sensitivity of the likelihood of general Markov graph models to addition or removal of edges makes common inference techniques challenging. As explained earlier, due to the intractability of computing the normalizing constant $\psi(\theta)$, sampling based inference methods are generally employed to perform inference over ERGMs. Roughly speaking, such methods proceed by sampling edges of a network in turn, holding the other edges constant, as repeating this procedure defines a Markov chain that converges asymptotically to the true distribution. At each sampling step, there is some probability of adding an edge to the graph which should be drawn according to the desired distribution. Now, because edges exhibit conditional dependencies, the addition of one edge may increase the probability of another edge being added to the graph. The difficulty with the specification of ERGMs given in $\Cref{ex:markov_graphs}$ is that the likelihood can be highly sensitive to the addition or removal of an edge. For instance, including high-order $k$-stars all with positive $\theta$, then for every additional edge added to a high degree node, the change to the likelihood grows exponentially since a $d$-degree node has $\binom{d}{k}$, $k$-stars. Thus, applying sampling based procedures to these Markov graph models tends to lead to ``avalanche'' effects -- as we add edges the conditional probability of other edges explosively increases, leading to convergence to the complete graph \cite{Sni+06}. In fact, this is related to the issue of model degeneracy, since most of the probability mass of the distribution is on the complete graph. Thus, alternative models aim to use sufficient statistics that have smaller impact on the sufficient statistics and thus the likelihood of the model. This notion of robustness of the sufficient statistics to addition or removal of edges is closely related to differential privacy, suggesting that the subsequent model may be amenable to use under differential privacy constraints.
+\section{Sufficient Statistics of ERGMs}\label{sec:alt_stats}
 
-\section{Alternating Sufficient Statistics for ERGMs}\label{sec:alt_stats}
+In practice, due to its simplicity, the $G(n,p)$ model is used only as a starting point in inference over real-world data, while the full Markov graph model is infrequently used as it suffers from poor statistical properties. In particular, the Markov graph model is degenerate for many parameter configurations, representing only distributions that put all of their probability mass on either nearly-complete graphs (graphs with all edges present) or on $G(n,p)$ graphs \cite{Jon99}. In response to these problems of degeneracy with Markov graphs, more robust ``alternating'' sufficient statistics are generally used in ERGMs to capture structural properties of networks.  We will first provide definitions of these statistics and then expand on mathematical motivation behind them.
 
-In response to the problems of degeneracy with Markov graphs, more robust sufficient ``alternating'' statistics are generally used in ERGMs. In this section, we present the alternating sufficient statistics commonly used for ERGMs. We will first provide definitions of the statistics and then explain the motivation and intuition behind them.
-
-\subsection{Definitions}
+\subsection{Alternating Sufficient Statistics}
 
 \begin{figure}[!ht]
 	\label{fig:graphdiagram}
@@ -99,23 +92,21 @@ In response to the problems of degeneracy with Markov graphs, more robust suffic
 	\end{align*}
 \end{definition}
 
-Now, we introduce the notion of ``shared partners'' of two nodes -- the number of common neighbors that two nodes share. This will give us a clean way of representing $k$-triangles and $k$-two-paths:
+We introduce the notion of ``shared partners'' of two nodes -- the number of common neighbors that two nodes share -- which give a clean way to count $k$-triangles and $k$-two-paths.
 \begin{definition}[Shared partners]
 	\label{def:shared_partners}
-	We denote the \emph{shared partner count} of nodes $i$ and $j$ by, 
+	We denote the \emph{shared partner count} of nodes $i$ and $j$: 
 	\begin{align}
 	P_{ij}(x) = \sum_{\ell \in V} x_{i \ell} x_{j \ell}
 	\end{align} 
 \end{definition}
-Note, then that if two nodes $i$ and $j$ have a shared partner count of $1$ and there is an edge between $i$ and $j$, then the edge participates in one triangle.
 
-We define \emph{$k$-triangles} analogously to $k$-stars, so that a $k$-triangle consists of $k$ triangles that all share an edge. We can count $k$-triangles using the number of common neighbors to any two nodes:
-
+We define \emph{$k$-triangles} analogously to $k$-stars, so that a $k$-triangle consists of $k$ triangles that all share an edge. We can count the total number of $k$-triangles in a graph using the number of shared partners:
 \begin{align}
 \label{eq:k-triangle}
 T_k(x) = \sum_{1 \leq i < j \leq n} x_{ij} \binom{P_{ij}}{k} \quad \text{for } (k \geq 2), \quad \text{and } T_1 = \frac{1}{3} \sum_{1 \leq i < j \leq n} x_{ij} P_{ij}
 \end{align}
-where $T_1$ has an extra factor of $\frac{1}{3}$ in front because of the symmetry of a $1$-triangle for all three nodes included in the triangle.
+%where $T_1$ has an extra factor of $\frac{1}{3}$ in front because of the symmetry of a $1$-triangle for all three nodes included in the triangle.
 
 \begin{definition}[Alternating $k$-triangle statistic \cite{Sni+06}]
 	\label{def:altktri}
@@ -126,12 +117,12 @@ where $T_1$ has an extra factor of $\frac{1}{3}$ in front because of the symmetr
 	\end{align*}
 \end{definition}
 
-We define an \emph{independent $k$-two-path} as a pair of nodes (possibly connected or unconnected) with $k$ paths of length $2$ connecting them. We can think of a $k$-two-path as a precondition for a $k$-triangle, since every $k$-triangle must contain an independent $k$-two-path. We can count the number independent $k$-two-paths in terms of shared partners as 
+We define an \emph{independent $k$-two-path} as a pair of nodes (possibly connected or unconnected) with $k$ paths of length $2$ connecting them. We can think of a $k$-two-path as a precondition for a $k$-triangle, since every $k$-triangle must contain an independent $k$-two-path. In terms of shared partners, independent $k$-two-paths can be represented as:
 \begin{equation}
 \label{eq:k-two-path}
 U_k(x) = \sum_{1 \leq i < j \leq n} \binom{P_{ij}}{k} \text{ for } k \not= 2 \quad \text{and } U_2(x) = \frac{1}{2} \sum_{1 \leq i < j \leq n} \binom{P_{ij}}{2}
 \end{equation}
-where $U_2$ is preceded by a factor of $\frac{1}{2}$, because a $k$-two-path with $k=2$ is a $4$-cycle and hence is symmetric with respect to the two pairs of non-adjacent nodes making up the cycle.
+%where $U_2$ is preceded by a factor of $\frac{1}{2}$, because a $k$-two-path with $k=2$ is a $4$-cycle and hence is symmetric with respect to the two pairs of non-adjacent nodes making up the cycle.
 
 \begin{definition}[Alternating $k$-two-path statistic \cite{Sni+06}]
 	\label{def:altktwopath}
@@ -150,15 +141,9 @@ Now, having defined the ``alternating'' sufficient statistics, the proposed mode
 
 where $E(x)$ is the number of edges in graph $x$, the alternating k-two-path and k-triangle statistics generally use the same weighting parameter $\gamma$. In practice, a subset of the sufficient statistics can be used in the model, depending on what properties of a graph are pertinent to model for a given network. 
 
-\subsection{Discussion}
-
-The overarching motivation behind introducing ``alternating'' sufficient statistics of the ERGMs, is that these statistics will be more robust to addition or removal of many edges adjacent to an individual node, alleviating issues of model and inferential degeneracy. 
-
-For instance, consider adding an edge to a high degree node with degree $k$. This addition leads to the addition of one $(k+1)$-star, $\binom{k}{k-1}$ $k$-stars, $\binom{k}{k-2}$ $(k-1)$-stars and so on, each using the new edge. Therefore, the total number of additional stars in the graph resulting from adding this edge is $\sum_{i = 0}^{k} \binom{k}{i} = 2^k$. As discussed in \Cref{sec:ergms}, for Markov graphs including all stars as sufficient statistics, this could lead to a large change in the probability of the graph given the model (for arbitrary $\theta_k$) causing a degenerate model that has almost all of its probability on near-complete graphs. However, by alternating the signs of $k$-stars, the additional $(k-1)$-stars and $k$-stars balance each-other out. In particular, in the case of $k$-stars, we can think of the alternating $k$-star statistic as imposing constraints on the $\theta_k$ in \Cref{ex:markov_graphs}, namely that they must be alternating in sign and geometrically decreasing. In doing so, we enforce the property that adding edges to low degree nodes makes a significant difference in the likelihood of the graph, while adding edges to already high degree nodes makes less of a difference. 
-
- The same general reasoning applies to the use of alternating statistics for $k$-triangles and $k$-two-paths -- alternation leads high degree nodes to become relatively less important in the likelihood of the graph, preventing the complete graph from having almost all of the probability mass of the distribution. 
+The overarching motivation behind introducing ``alternating'' sufficient statistics of the ERGMs is that these statistics are robust to addition or removal of an edge adjacent to an individual node, alleviating degeneracies  in the Markov graph model. For instance, consider adding an edge to a high degree node with degree $k$. This new edges contributes one $(k+1)$-star, $\binom{k}{k-1}$ $k$-stars, $\binom{k}{k-2}$ $(k-1)$-stars and so on. Therefore, the total number of additional stars in the graph resulting from adding this edge is $\sum_{i = 0}^{k} \binom{k}{i} = 2^k$. For Markov graphs including all stars with arbitrary associated parameters, this could lead to a large increase (or decrease) in the likelihood of the graph making the model degenerate as it places almost all of its probability on either near-complete or near-empty graphs. However, by imposing constraints on the parameters $\theta_k$, namely by alternating the signs of  the $k$-star statistics, the additional $(k-1)$-stars and $k$-stars balance each-other out.   The same general reasoning applies to the use of alternating statistics for $k$-triangles and $k$-two-paths -- alternation prevents the probability distribution from putting all of its mass on graphs with many high degree nodes,  preventing degeneracy of the model. %In particular, in the case of $k$-stars, we can think of the alternating $k$-star statistic as imposing constraints on the $\theta_k$ in \Cref{ex:markov_graphs}, namely that they must be alternating in sign and geometrically decreasing. In doing so, we enforce the property that adding edges to low degree nodes makes a significant difference in the likelihood of the graph, while adding edges to already high degree nodes makes less of a difference. 
  
- This interpretation of alternating statics as down-weighting high degree nodes can be understood by looking at an alternative representation of the statistics in terms of the degree distribution and the number of shared partners for nodes. 
+ This interpretation of alternating statics as limiting the sensitivity of the likelihood to addition or removal of edges to high degree nodes can be understood by looking at an alternative representation of the statistics in terms of the degree distribution and the number of shared partners for nodes. Below, we present these equivalent representations of the statistics, which will also be helpful in proofs of privacy in \Cref{ch:dp_stats}. 
  
  \subsubsection{Alternating $k$-star}
  
@@ -169,7 +154,7 @@ For instance, consider adding an edge to a high degree node with degree $k$. Thi
  u_\lambda^{(s)}(x) & = \sum_{i = 1}^{n-1} D_i(x) \sum_{k = 2}^{n-1} \left(\frac{-1}{\lambda}\right)^{k-2} \binom{i}{k}   \nonumber\\
  & =  \lambda^2 \sum_{i = 0}^{n-1} \left(\frac{\lambda - 1}{\lambda}\right)^i D_i + 2 \lambda |E| - n \lambda^2
  \end{align}
- Thus, an ERGM using the alternating $k$-star statistic consists of a term representing the number of edges (akin to a $G(n,p)$ model) as well as a linear combination of the degrees where lower degree nodes are up-weighted exponentially compared to higher degree nodes, reflecting the tendency towards a power law degree distribution. Sociologically, the coefficient of the $k$-star statistic can be interpreted as the propensity for high degree nodes in the network. If the coefficient of the statistic is positive, then networks with a few high degree ``hubs'' are observed, while if it is negative, high degree nodes are discouraged and the network consists of low-degree nodes \cite{Sni+06}.
+The alternating $k$-star statistic is thus made up of the number of edges as well as a linear combination of the degree sequence where lower degree nodes are up-weighted exponentially compared to higher degree nodes, reflecting the tendency towards a power law degree distribution. Since a term representing the number of edges in the network is generally included along with this statistic, the model is mathematically equivalent to a model using a geometrically weighted average of the degree sequence. Sociologically, the coefficient of the $k$-star statistic can thus be interpreted as the propensity for high degree nodes in the network. If the coefficient of the statistic is positive, then networks with a few high degree ``hubs'' are observed, while if it is negative, high degree nodes are discouraged and the network consists of mostly low-degree nodes \cite{Sni+06}.
  
 \subsubsection{Alternating $k$-triangle}
  
@@ -180,7 +165,7 @@ u_\gamma^{(t)}(x) & = \sum_{1 \leq i < j \leq n} x_{ij} \sum_{k = 1}^{n-2} \left
 & = \gamma \sum_{1 \leq i < j \leq n} x_{ij} \left(1 - \left(\frac{\gamma-1}{\gamma} \right)^{P_{ij}} \right) \nonumber\\
 & = \gamma |E| - \gamma \sum_{1 \leq i < j \leq n} x_{ij} \left(\frac{\gamma-1}{\gamma} \right)^{P_{ij}}
 \end{align}
-Thus, the first term of the triangle statistic is just the number of edges. But note that in the second term if $P_{ij} = 0$ but $x_{ij} = 1$ so that we have an edge that does not participate in a triangle, then this term cancels with the added edge, while the second term geometrically decreases as we add additional shared partners for an edge, so the statistic does not change with the addition of an edge, but with the addition of triangles, although the change is smaller for higher-order $k$-triangles. Including this term has a sociological interpretation of taking into account the tendency for ``triangle closure'' as it increases with further closure of triangles in the graph. Thus, the corresponding coefficient for this term in the likelihood of the model can be interpreted as the importance of triad closure in the generation of the graph \cite{GKM09}. In contrast to directly including the number of triangles in the graph, the alternating $k$-triangles statistic is much more stable, preventing the model degeneracies discussed earlier. 
+Note, then, that any edge that does not participate in a triangle (so $x_{ij} = 1$ but $P_{ij} = 0$) does not contribute to the the alternating $k$-triangle statistic. On the other hand, as we add additional shared partners to an edge, the second term in (\ref{eq:alternative-k-tri}) falls exponentially so the statistic increases, but  by less for higher order $k$-triangles than for lower-order triangles.  Sociologically, this term can be interpreted as the importance of triangle closure in the generation of the graph \cite{GKM09}. In contrast to directly including the number of triangles in the graph, the alternating $k$-triangles statistic is more stable, preventing the model degeneracies discussed above. 
 
 \subsubsection{Alternating $k$-two-path}
 
@@ -193,31 +178,65 @@ u_\gamma^{(p)}(x) & = \sum_{1 \leq i < j \leq n} \sum_{k = 1}^{n-2} \left(\frac{
 \end{align}
 Thus, the alternating $k$-two-path has an interpretation similar to that of the alternating $k$-triangle. As shared partners are added for any two nodes, the second term of the statistic increases, but the increase falls exponentially with additional partners. This term is generally only included in conjunction with the $k$-triangle statistic to try to separate out the effects of two-paths forming between unconnected nodes and mutual connections forming between already connected nodes.
 
-In practice, the coefficients of these various sufficient statistics are usually inferred either over separate networks (for instance, networks of neurons at various life-stages) or over subpopulations of one network and by comparing the inferred coefficients, researchers can understand the relative importance of the different underlying processes discussed (such as triad closure and tendency for ``hub'' nodes) to the different networks.
+\subsection{Sufficient Statistics for Labeled Nodes}
 
-\section{Inference on ERGMs}
+The alternating statistics over $k$-stars, $k$-triangles and $k$-two-paths capture structural properties of network data. Frequently, however, there labels associated with nodes in the network, which are important to model. ERGMs can take into consideration both the structure of the network and the labels associated with nodes, by including sufficient statistics based off of the labels, allowing researchers to capture properties like homophily, the tendency for similar actors to build relationships with one another within a network. Generally, labels are taken to be fixed and exogenous to the edges, so that attributes of the nodes may affect the formation of the network, whereas relationships in the network are not thought of as impacting attributes. This is generally a reasonable assumption, as labels often represent the identity of an individual, containing characteristics like gender, race, or age. As there are many potential ways to incorporate labeled data into an ERGM, we will focus here on three of the most commonly used statistics for discrete nodal attributes, ``homophily'', ``popularity'' and ``mixing.''\footnote{These have fairly straightforward analogues for continuous nodal attributes, but we focus on the discrete case, as this is applicable to the dataset analyzed.} 
 
-While it can be of interest to consider the properties of ERGMs based on their parameters, generally ERGMs are of interest in modeling realized network datasets. In such an inferential approach, a data analyst wishes to finds parameters $\theta$ of a given class of ERGM that describe ``well'' the realized data and often to also decide what model best fits the data (which set of sufficient statistics best describe the data.)
+In particular, letting $z_i$ be a discrete attribute of node $i$ (gender, for instance) we introduce the following sufficient statistics to represent different processes of social selection \cite{LKR12}:
 
-\subsection{Sampling Graphs}
+\begin{table}[H]
+	\caption{Common sufficient statistics for discrete nodal attributes.}
+	\label{table:node_suff_stats_defn}
+	\begin{center}
+	\begin{tabular}[!h]{ll}
+	\hhline{=|=}
+	\multicolumn{1}{c}{\emph{Parameter}} &  \multicolumn{1}{c}{\emph{Statistic}}  \\ \midrule
+	Homophily (Uniform)  & $\sum\limits_{i < j} x_{ij} \I (z_i = z_j) $ \\\midrule
+	Homophily (Differential)  & $\sum\limits_{i < j} x_{ij} \I (z_i = z_j = a) $ \\\midrule
+	Popularity &  $\sum\limits_{i < j} x_{ij} \left(\I (z_i = a) + \I (z_j = a) \right) $ \\ \midrule
+	Mixing & $\sum\limits_{i < j} x_{ij} \I (z_i = a) \I (z_j = b)$  \\
+	\hhline{=|=}
+	\end{tabular}
+	\end{center}
+\end{table}
 
-\todo[inline]{Write out Metropolis Hastings, (Gibbs?) samplers and motivate them and then describe and motivate Bayesian inference}
+Uniform homophily captures the tendency for nodes with the same attribute to share an edge, while differential homophily captures this phenomenon for a specific attribute, which may be useful if, for instance, we thought that men and women have different propensities to become friends with people of the same gender. The popularity parameter is fairly self-explanatory as it measures the number of edges that have nodes with a given attribute as an endpoint and can be thought of as the overall sociability of a group with a specific attribute. Finally, the mixing parameter represents the number of edges between nodes with two different, specific attributes. Including such nodal attribute statistics in conjunction with the alternating sufficient statistics discussed in \Cref{sec:alt_stats} allows for specification of ERGMs that separate out social selection effects like homophily from structural effects like triangle closure, making ERGMs a powerful modeling tool.
+
+\section{Bayesian Inference on ERGMs}
+
+Having provided an ERGM specification that captures the characteristics of interest in a network, the goal of inference is to find parameters $\theta$ that describe the realized data well. In the framework of maximum likelihood estimation, this means finding a $\theta$ that maximizes the probability of drawing observed network $x_{obs}$ from the distribution $p(X|\theta)$. In the Bayesian paradigm, an analyst specifies a prior distribution over $\theta$ and then wishes to compute a posterior distribution of $\theta$ given the observed network. Bayesian inference is more general than maximum likelihood inference in the sense that if an analyst chooses a flat prior on $\theta$ (a uniform prior over the parameter space) and takes the maximum of the posterior as a point estimate, then Bayesian inference reduces to maximum likelihood inference.
+%By the theory of exponential family distributions, this $\hat{\theta}_{MLE}$ corresponds to the probability distribution that centers $x_{obs}$ (that is, $\hat{\theta}_{MLE}$ is the parameter $\theta$ such that $\E_{\theta}[u(X)] = u(x_{obs})$.) 
+
+In general, exact inference is not feasible for ERGMs due to the presence of the intractable normalizing constant $\psi(\theta)$ in the likelihood (\Cref{def:ergm_defn}), which is a sum over the space of possible graphs on $n$ nodes of size $2^{\binom{n}{2}}$. Therefore, a number of approximate MCMC approaches have been proposed to perform inference. In this work, we focus on Bayesian inference over ERGMs, because it constitutes the state-of-the-art in non-private inference methods and has been shown to be more stable than MCMC-MLE approaches \cite{CF11}. Additionally,  the noise from differentially private mechanisms can be incorporated quite naturally into the Bayesian framework.  The non-private Bayesian inference method proposed by Caimo and Friel is based on the Exchange Algorithm\cite{MGM12} and is fairly simple to describe: 
 
 \begin{algorithm}
-	\caption{Metropolis-Hastings Sampler for ERGMs}
-	Input: parameter vector $\theta$, initial graph $x^{(0)}$, number of iterations $T$ \\
-	Output: sequence of graphs $x^{(1)},...x^{(T-1)},x^{(T)}$ such that $x^{(T)} \sim p(X | \theta)$ as $T \to \infty$
+	\caption{Non-Private Bayesian Inference for ERGMs (Exchange Algorithm) \cite{CF11} }
+	Input: ERGM distribution $\pi(X | \theta)$, prior $p(\theta)$, observed graph $x_{obs}$, number of burn-in draws $r$, symmetric proposal distribution $h(\cdot | \theta)$. \\
+	Output: sequence of draws $\theta^{(r)},...\theta^{(T)}$ from posterior distribution $p(\theta | x_{obs})$.
 	
 	\vspace{0.1in}
-		For {$ t = 1,...,T$}:
-		\begin{enumerate}
-			\item  Select nodes $i$ and $j$ at random
-			\item Propose graph $x^*$ which is the same as $x^{(t-1)}$ except that we ``toggle'' the edge between $i$ and $j$ so $x^*_{ij} = 1 - x^{(t-1)}_{ij}$
-			\item Accept the proposed move with probability $\min\left\{1, \frac{p(x^* | \theta)}{p(x^{(t-1)} | \theta)} \right\}$. If the move is accepted set $x^{(t)} = x^*$. Otherwise, set $x^{(t)} = x^{(t-1)}$
-		\end{enumerate}
+	For {$ t = 1,...,T$}:
+	\begin{enumerate}
+		\item  Draw parameter vector $\theta^* \sim h(\cdot | \theta^{(t-1)})$
+		\item Sample graph $x^* \sim \pi(\cdot | \theta^*)$
+		\item Accept the proposed move with probability $\min\left\{1, \alpha\right\}$. If the move is accepted, set $\theta^{(t)} = \theta^*$. Otherwise, set $\theta^{(t)} = \theta^{(t-1)}$
+	\end{enumerate}
+	where \begin{align*}
+	\alpha &= \frac{p(\theta^*)}{p(\theta^{(t-1)})} \exp\left\{\left(\theta^* - \theta^{(t-1)}\right)^T\left(u(x_{obs}) - u(x^*)\right) \right\}
+	\end{align*}
 \end{algorithm}
 
-\subsection{Estimation of Parameters}
+The algorithm can be justified by considering sampling from an augmented distribution with two auxiliary variables $x^*, \theta^*$:
+$$p(x^*, \theta^*, \theta | x_{obs}) \propto \pi(x_{obs} | \theta)p(\theta) h(\theta^* | \theta) \pi(x^* | \theta^*) $$
+where $\pi$ refers to the ERGM probability distribution. Marginalizing out $\theta^*$ and $x$ from the augmented distribution gives the posterior distribution $p(\theta | x_{obs})$ of interest. Steps $1$ and $2$ are Gibbs updates of $\theta^*$ and $x^*$, while step $3$ can be justified as the appropriate Metropolis-Hastings acceptance ratio:
+\begin{align*}
+\alpha & = \frac{ \pi(x_{obs} | \theta^*)p(\theta^*) h(\theta^{(t-1)}| \theta^*) \pi(x^* | \theta^{(t-1)})  } { \pi(x_{obs} | \theta^{(t-1)})p(\theta) h(\theta^* | \theta{^{(t-1)}})   \pi(x^* | \theta^*)  } \\
+& = \frac{p(\theta^*)}{p(\theta)} \frac{\pi(x_{obs} | \theta^*) \pi(x^* | \theta^{(t-1)})}{ \pi(x_{obs} | \theta^{(t-1)}) \pi(x^* | \theta^*) }
+\end{align*}
+where we drop the $h$ transition probabilities by symmetry and the intractable normalizing constants for $\theta^*$ and $\theta^{(t-1)}$ cancel, allowing easy computation of $\alpha$. Thus, by standard MCMC theory, the draws $\theta^{(t)}$ come asymptotically from the desired posterior distribution.
+
+In practice, Caimo and Friel advocate the use of a population-MCMC variant of their basic algorithm, in which multiple Markov chains are run in parallel, with the state space defined over the $\theta$'s of these multiple chains, as this population MCMC approach tends to converge faster and lead to less temporal dependence in draws from the Markov chain.  We use this method, known as Parallel Adaptive Direction Sampling, in our private inference methods and explain it in detail in \Cref{appendix_mcmc} along with a Metropolis-Hastings sampler to simulate networks from an ERGM with specified parameters.
+
 
 
 

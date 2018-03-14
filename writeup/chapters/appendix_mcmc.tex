@@ -1,0 +1,52 @@
+\subsubsection{Simulating Networks from an ERGM}
+
+First, we describe a simple MCMC method for simulating networks from an ERGM given parameters of the model. This method is used both to generate synthetic graphs in our experiments and to draw samples needed for inference.
+
+\begin{algorithm}[!ht]
+	\caption{Metropolis-Hastings Sampler for ERGMs}
+	Input: parameter vector $\theta$, initial graph $x^{(0)}$, number of iterations $T$ \\
+	Output: sequence of graphs $x^{(1)},...,x^{(T)}$ such that $x^{(T)} \sim p(X | \theta)$ as $T \to \infty$
+	
+	\vspace{0.1in}
+	For {$ t = 1,...,T$}:
+	\begin{enumerate}
+		\item  Select nodes $i$ and $j$ at random
+		\item Propose graph $x^*$ which is the same as $x^{(t-1)}$ except that we ``toggle'' the edge between $i$ and $j$ so $x^*_{ij} = 1 - x^{(t-1)}_{ij}$
+		\item Accept the proposed move with probability $\min\left\{1, \frac{p(x^* | \theta)}{p(x^{(t-1)} | \theta)} \right\}$. If the move is accepted set $x^{(t)} = x^*$. Otherwise, set $x^{(t)} = x^{(t-1)}$
+	\end{enumerate}
+\end{algorithm}
+
+The acceptance ratio (assuming all pairs of nodes are chosen with equal probability) is just $ \exp \{\theta^T(u(x^*) - u(x^{(t-1)}))$. As the difference in sufficient statistics between two graphs differing in an edge (known as the ``change statistic'') is typically a simple function of the nodes participating in that edge, this ratio is easy to compute (for instance, for the edges sufficient statistic, it is always just $1$ if adding an edge and $-1$ if removing). 
+
+ If an ERGM specification puts most of its probability mass on relatively sparse graphs, the sampler that proposes all pairs of nodes with equal probability in step 1 will reject the addition of an edge in most steps, leading to slow convergence. Therefore, Tie-No-Tie (TNT) sampling is generally used in step 1, where we first select either the set of edges or the set of non-edges with equal probability and then pairs of nodes are selected uniformly at random from within the chosen set, biasing step 1 to consider removing edges more frequently than adding (and accounting for the non-uniform proposal distribution in the acceptance ratio). Therefore, throughout this thesis we use TNT sampling to efficiently draw samples from ERGMs.
+
+\subsubsection{Population MCMC Version of the Exchange Algorithm}
+
+The basic exchange algorithm for Bayesian inference over ERGMs can be easily modified to take advantage of population MCMC methods, which tend to converge faster, since using various chains reduces temporal dependency between time-steps in the Markov Chain. In particular, Caimo and Friel propose using parallel ADS, which maintains a collection of $H$ chains that interact with one another.
+
+\begin{algorithm}[!ht]
+	\caption{Non-Private Bayesian Inference for ERGMs (Parallel ADS) \cite{CF11} }
+	Input: ERGM distribution $\pi(X | \theta)$, prior $p(\theta)$, observed graph $x_{obs}$, number of chains to use $H$, tuning parameter $\gamma$.\\
+	Output: sequence of draws $(\theta_1^{(r)},...\theta_1^{(T)}),...,(\theta_H^{(r)},...\theta_H^{(T)})$ from posterior distributions $p(\theta_h | x_{obs})$.
+	
+	\vspace{0.1in}
+	For {$ t = 1,...,T$}:
+	
+	\vspace{0.1in}
+	
+	\hspace{0.1in} For each chain {$ h = 1,...,H$}:
+	
+	\begin{enumerate}
+		\item Select at random  two different chains $h_1$ and $h_2$ from $\{1,...,H\} \backslash h$
+		\item  Propose $\theta^*_h = \theta^{(t-1)}_h + \gamma\left(\theta^{(t-1)}_{h_1} -  \theta^{(t-1)}_{h_2}\right) + \epsilon$ 
+		\newline where $\epsilon$ is random noise drawn from a symmetric distribution, such as a Normal.
+		\item Sample graph $x_h^* \sim \pi(\cdot | \theta_h^*)$
+		\item Accept the proposed move with probability $\min\left\{1, \alpha\right\}$. If the move is accepted, set $\theta_h^{(t)} = \theta_h^*$. Otherwise, set $\theta_h^{(t)} = \theta_h^{(t-1)}$
+	\end{enumerate}
+	where \begin{align*}
+	\alpha &= \frac{p(\theta_h^*)}{p(\theta_h^{(t-1)})} \exp\left\{\left(\theta_h^* - \theta_h^{(t-1)}\right)^T\left(u(x_{obs}) - u(x_h^*)\right) \right\}
+	\end{align*}
+\end{algorithm}
+
+The MH acceptance ratio reamins the same as in the single-site update, because the proposal distribution is still symmetric -- making the reverse jump from $\theta_h^*$ to $\theta_h^{(t-1)}$ simply requires reversing $\epsilon$ and the order of $h_1$ and $h_2$. The tuning parameter $\gamma$ controls the amount of interaction between chains and is generally taken to be in the range $0.5$ and $1$ (in this case we take $\gamma = 0.5$ throughout.) Additionally, the number of chains to use can be tuned in inference, but we choose to use $3$ chains throughout as this seems to lead to convergence.
+

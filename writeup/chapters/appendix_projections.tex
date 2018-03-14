@@ -1,0 +1,86 @@
+\section{Edge-Adjacency Model}
+
+Blocki et. al give an efficient projection to $\H_k$ in the edge-adjacency model with $GS_\mu = 3$  \cite{BBDS13}:
+
+\begin{algorithm}[!ht]
+	\caption{3-smooth Projection to $\H_k$ for Edge-Adjacency Model}
+	Input: graph $G$, cutoff $k$ \\
+	Output: graph $\mu(G)$ with max degree $k$
+	
+	\vspace{0.1in}
+	\begin{enumerate}
+		\item  Fix a canonical ordering over all possible edges in a graph on $n$ vertices. Let $e_1^v...e_t^v$ denote the edges incident to vertex $v$ in this canonical ordering.
+		\item Delete edge $e = (u,v)$ if and only if:
+		\begin{enumerate}[(i)]
+			\item $e = e_j^v$ for $j > k$, or
+			\item $e = e_j^u$ for $j > k$
+		\end{enumerate}
+	\end{enumerate}
+\end{algorithm}
+
+Intuitively, we keep only the first $k$ edges in the canonical ordering for any node with degree above $k$. It is clear, then, that this algorithm results in a graph of max degree $k$ and that any graph where all nodes have degree less than $k$ are unchanged. The global sensitivity follows fairly straightforwardly. Consider two graphs $G_1$ and $G_2$ that are neighbors differing on a single edge $e=(x,y)$ where wlog $G_1$ contains $e$. Then, for every vertex that is not $x$ or $y$, exactly the same set of edges is deleted, since $e$ does not appear in any other nodes' canonical ordering. If $e$ is deleted, then $\mu(G_1) = \mu(G_2)$. However, if $e$ is not deleted than there may be at most one edge incident to $x$ and one edge incident to $y$ that were deleted from $\mu(G_1)$ but not $\mu(G_2)$, so the neighboring graphs differ in $3$ edges. In practice, since this algorithm deletes edges from high degree nodes, it may not bias results too extensively to aggressively estimate $k$ for a graph, as this will only mark edges for deletion on a few nodes that are above the cutoff. However, choosing a cutoff that is too low may remove many edges from many high degree nodes, which will bias not only the number of edges, but also many other sub-graph counts like triangles $k$-stars, which we explore in our experimental results.
+
+\section{Node-Adjacency Model}
+
+\subsection*{Naive Truncation}
+
+The naive truncation projection $\mu_{trunc}: \G_n \to \H_{k}$ proposed by Kasiviswanathan et. al. simply removes all nodes from the graph with degree above the cutoff $k$ \cite{KNRS13}. It is clear, then, that $\mu_{trunc}$ maps any graph in $\H_k$ to itself and that its image is $\H_k$. Moreover, $\mu_{trunc}$ is quite efficient, requiring $O(n + \binom{n}{2})$ time. It is also fairly simple to characterize the smooth sensitivity of $\mu_{trunc}$. First, note that the local sensitivity of $\mu_{trunc}$ on graph $G$ is $1 + D_k(G) + D_{k+1}(G)$ where  $D_{i}$ is the number of nodes of degree $i$ in graph $G$ since rewiring one node in the graph may affect whether all nodes of degree $k$ or $k+1$ are truncated by $\mu_{trunc}$. We an characterize the smooth sensitivity as follows:
+
+\begin{proposition}[Smooth Sensitivity of $\mu_{trunc}$ \cite{KNRS13}]
+Given graph $G$ and hypothesis $\H_k$, let $N_t(G)$ denote the number of nodes with degrees in the range $[k - t, k+ t+ 1]$ and let $C_t = 1 + t+ N_t(G)$. Then:
+\begin{enumerate}
+	\item The local sensitivity of $\mu_{trunc}$ is $C_0(G)$.
+	\item The local sensitivity at distance $t$ of $\mu_{trunc}$ is $C_{t-1}(G)$. 
+	\item The $\beta$-smooth sensitivity of $\mu_{trunc}$ is $\max\limits_{t \geq 0} e^{-\beta t} C_{t}(G)$.
+	\item If $N_{\ln n/\beta} (G) \leq \ell$, so there are at most $\ell$ nodes in $G$ with degree in range $k \pm (\ln n/\beta)$, then 
+	$$S^*_{\mu, \beta}(G) \leq 1 + \ell + \frac{1}{\beta}$$
+\end{enumerate}
+
+Thus, we can compute $\beta$-smooth sensitivity efficiently using either part $3$ or $4$ of the above proposition. Notice that even if a graph is in $\H_k$, it may have high smooth sensitivity if it has many nodes with degree close to the cutoff $k$. However, part $4$ gives a guideline for choosing a conservative cutoff $k$. In particular, by choosing $k$ to be $\ln n  / \beta$ above what is thought to be the max degree of the graph, then the smooth sensitivity would simply be $1$. This is not an unreasonable quantity to add to the cutoff, if the cutoff is itself $O(\log n)$, which is often the case. Further, degree distributions are often thought to fall exponentially, so that it is unlikely that there are very many nodes with degree near the cutoff, especially if a conservative cutoff is chosen, suggesting that $\ell$ might be quite low, even for cutoffs close to the believed cutoff $k$.
+
+\end{proposition}
+
+\subsection*{LP-Based Projection}
+
+Blocki et. al. propose a projection using linear programming. Their method satisfies a relaxed definition of a projection, where $\mu_{LP} : \G_n \to \H_{2k}$ and $\forall G \in \H_{k}$, $\mu(G) = G$, (but graphs in $\H_k$ are not necessarily mapped to themselves). Because the image is $\H_{2k}$, their method requires calibrating the restricted sensitivity to $\H_{2k}$. However, in contrast to naive truncation, their approach guarantees that graphs in $\H_k$ always have low smooth sensitivity, because their algorithm outputs an estimator of the distance between a graph and its projection, used to compute a $\beta$-smooth upper bound, where the distance estimator is always $0$ for graphs in $\H_k$.
+
+The algorithm is also less efficient than naive truncation as it requires solving a  linear program with $n + \binom{n}{2}$ decision variables: a variable $x_u$ per node $u$ representing whether node $u$ should be removed from the projected graph or not and a variable $w_{u,v}$ per edge $(u,v)$ representing whether the edge from $u$ to $v$ remains in the projected graph:
+
+\begin{algorithm}[!ht]
+	\caption{Projection and $4$-Smooth Distance Estimator to $\H_{2k}$ for Node-Adjacency Model \cite{BBDS13}}
+	Input: graph $G$, cutoff $k$ \\
+	Output: graph $\mu_{LP}(G)$ with max degree $2k$, $4$-smooth estimate of distance from graph to its projection $\hat{d}(G)$
+	
+	\vspace{0.1in}
+	\begin{enumerate}
+		\item  Solve the following LP to get fractional solution $(\bar{x}^*, \bar{w}^*)$. Let there be $n$ decision variables $x_u$, one for each vertex, and $\binom{n}{2}$ decision variables $w_{u,v}$ one for each potential edge. Additionally, let $a_{uv} = 1$ if the edge $\{u, v\}$ is in $G$ and $0$ otherwise. Then, solve the following LP:
+		\begin{align*}
+		\min \sum_{v \in V} x_v  \quad & s.t. \\
+		& (1) \hspace{0.1in} \forall v, x_v \geq 0 \\
+		& (2) \hspace{0.1in} \forall u,v, w_{u,v} \geq 0 \\
+		& (3) \hspace{0.1in} \forall u,v, a_{uv} \geq w_{uv} \geq a_{uv} - x_u - x_v \\
+		& (4) \hspace{0.1in} \forall u, \sum_{v \not = u} w_{u,v} \leq k \\
+		\end{align*}
+		
+		\item Let $\mu_{LP}(G)$ be the graph resulting from removing every edge in $G$ for which either endpoint has weight greater than $\frac{1}{4}$, so either $x_u^* > \frac{1}{4}$ or $x_v^* > \frac{1}{4}$ for edge $(u,v)$.
+		
+		\item Define distance estimator to be $\hat{d}(G) = 4 \sum_u x^*_u$.
+	\end{enumerate}
+\end{algorithm}
+
+It is clear that if $G \in \H_k$, then the algorithm will return a distance estimator of $0$ and $\mu_{LP}(G) = G$, since we can take all $x_v$ to be equal to $0$, $w_{uv} = a_{uv}$ so that conditions $1$ to $3$ of the LP are met and condition $4$ is met because all vertices have degree less than $k$. Using the distance estimator gives a $\beta$-smooth upper bound on the local sensitivity of $\mu_{LP}$: 
+
+\begin{proposition}[Smooth Sensitivity of $\mu_{LP}$ \cite{BBDS13}]
+The smooth sensitivity of $\mu_{LP}$ can be bounded by
+$$
+S_{\mu, \beta}(G) \leq \exp\left\{\tfrac{\beta}{4} \hat{d}(G) \right\} \cdot g\left(\tfrac{\beta}{4}\right)
+$$
+where 
+$$g(x) = \begin{cases}
+\frac{2}{x} e^{-1 + \frac{5}{2} x}, & 0 \leq x \leq \frac{2}{5}\\
+5, & x > \frac{2}{5}
+\end{cases}$$ 
+\end{proposition}
+so $S_{\mu, \beta}(G) RS_f(\H_{2k})$ is a $\beta$-smooth upper bound on the local sensitivity of $f \circ \mu_{LP}$ on graph $G$.
+
+Comparing the two proposed methods, it is preferable to use naive truncation in cases where we believe $k \geq \ln n/\beta$, because then setting the cutoff to be $\hat{k} = k + \ln n/\beta$, we expect smooth sensitivity of $\mu_{trunc}$ to be below $1 + \frac{1}{\beta}$ and the restricted sensitivity will be lower than $RS_f(\H_{2k})$. In general, since we believe the graphs under consideration to have very few high degree nodes close to the cutoff, we expect naive truncation to perform quite well, since the smooth sensitivity should be relatively low for the graphs considered, while considering restricted sensitivity on $\H_{2k}$ may introduce more noise.

@@ -1,42 +1,17 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%															k-stars 											           %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-$k$-stars ($S_k$)
-\vspace{0.5cm}
-
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
-
-%Nodes
-\node[roundnode]      (u1)                     {};
-\node[roundnode]      (u2)       [below=1cm of u1] {};
-
-%Lines
-\path  (u1) edge (u2);
-\end{tikzpicture}
-\qquad
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
+\begin{tikzpicture}[roundnode/.style={circle, fill=black!60!blue, very thick,minimum size=2mm, inner sep=1.2pt}]
 
 
 %Nodes
 \node[roundnode]      (u1)                     {};
-\node[roundnode]      (u2)       [below right=1cm and 0.5cm of u1] {};
-\node[roundnode]      (u3)       [below left=1cm and 0.5cm of u1] {};
-
-%Lines
-\path  (u1) edge (u2);
-\path  (u1) edge (u3);
-\end{tikzpicture}
-\qquad
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
-
-
-%Nodes
-\node[roundnode]      (u1)                     {};
-\node[roundnode]      (u2)       [below left=1.0cm and 0.8cm of u1] {};
-\node[roundnode]      (u3)       [below left=1.0cm and 0.4cm of u1] {};
-\node[roundnode]      (u4)       [below right=1.0cm and 0.4cm of u1] {};
-\node[roundnode]      (u5)       [below right=1.0cm and 0.8cm of u1] {};
+\node[roundnode]      (u2)       [below left=1.0cm and 1.0cm of u1] {};
+\node[roundnode]      (u3)       [below left=1.0cm and 0.5cm of u1] {};
+\node[roundnode]      (u4)       [below right=1.0cm and 0.5cm of u1] {};
+\node[roundnode]      (u5)       [below right=1.0cm and 1.0cm of u1] {};
 \node[]      (ellipses)       [below=0.9 cm of u1] {\ldots};
+
+\node[align=center,font=\bfseries, yshift=2em] (title) 
+    at (current bounding box.north)
+    { $k$-star ($S_k$)};
 
 %Lines
 \path  (u1) edge (u2)
@@ -44,50 +19,11 @@ edge (u3)
 edge (u4)
 edge (u5);
 \end{tikzpicture}
-   
+\qquad 
 \vspace{0.5cm}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%															k-triangles 											     %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-$k$-triangles ($T_k$)
-\vspace{0.5cm}
+\begin{tikzpicture}[roundnode/.style={circle, fill=black!60!blue, very thick,minimum size=2mm, inner sep=1.2pt}]
 
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
-
-%Nodes
-\node[roundnode]      (u1)                     {};
-\node[roundnode]      (u2)       [below=1cm of u1] {};
-\node[roundnode]      (u3)       [below right=0.5cm and 0.8cm of u1] {};
-
-%Lines
-\path  (u1) edge (u2);
-
-\path (u1) edge (u3);
-
-\path (u2) edge (u3);
-\end{tikzpicture}
-\qquad
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
- 
- %Nodes
- \node[roundnode]      (u1)                     {};
- \node[roundnode]      (u2)       [below=1cm of u1] {};
- \node[roundnode]      (u3)       [below right=0.5cm and 0.8cm of u1] {};
- \node[roundnode]      (u4)       [right=0.8cm of u3] {};
- 
- %Lines
- \path  (u1) edge (u2);
- 
- \path (u1) edge (u3)
- edge (u4);
- 
- \path (u2) edge (u3)
- edge (u4);
- \end{tikzpicture}
- \qquad
-  \begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
-  
 %Nodes
 \node[roundnode]      (u1)                     {};
 \node[roundnode]      (u2)       [below=1cm of u1] {};
@@ -95,6 +31,11 @@ $k$-triangles ($T_k$)
 \node[roundnode]      (u4)       [right=0.8cm of u3] {};
 \node[]      (ellipses)       [right=0.15cm of u4] {\ldots};
 \node[roundnode]      (u5)       [right= 1.4cm of u4] {};
+
+\node[align=center,font=\bfseries, yshift=2em] (title) 
+    at (current bounding box.north)
+    { $k$-triangle ($T_k$)};
+
 
 %Lines
 \path  (u1) edge (u2);
@@ -107,49 +48,8 @@ $k$-triangles ($T_k$)
 				 edge (u4)
 				 edge (u5);
 \end{tikzpicture}
-
-\vspace{0.5cm}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%															k-two paths 											    %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-$k$-two-paths ($U_k$)
-\vspace{0.5cm}
-
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
-
-%Nodes
-\node[roundnode]      (u1)                     {};
-\node[roundnode]      (u2)       [below=1cm of u1] {};
-\node[roundnode]      (u3)       [below right=0.5cm and 0.8cm of u1] {};
-
-%Lines
-\path[dotted] (u1) edge (u2);
-
-\path (u1) edge (u3);
-
-\path (u2) edge (u3);
-\end{tikzpicture}
 \qquad
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
-
-%Nodes
-\node[roundnode]      (u1)                     {};
-\node[roundnode]      (u2)       [below=1cm of u1] {};
-\node[roundnode]      (u3)       [below right=0.5cm and 0.8cm of u1] {};
-\node[roundnode]      (u4)       [right=0.8cm of u3] {};
-
-%Lines
-\path[dotted] (u1) edge (u2);
-
-\path (u1) edge (u3)
-edge (u4);
-
-\path (u2) edge (u3)
-edge (u4);
-\end{tikzpicture}
-\qquad
-\begin{tikzpicture}[roundnode/.style={circle, fill=black!60, very thick,minimum size=2mm, inner sep=1.2pt}]
+\begin{tikzpicture}[roundnode/.style={circle, fill=black!60!blue, very thick,minimum size=2mm, inner sep=1.2pt}]
 
 %Nodes
 \node[roundnode]      (u1)                     {};
@@ -158,6 +58,10 @@ edge (u4);
 \node[roundnode]      (u4)       [right=0.8cm of u3] {};
 \node[]      (ellipses)       [right=0.15cm of u4] {\ldots};
 \node[roundnode]      (u5)       [right= 1.4cm of u4] {};
+
+\node[align=center,font=\bfseries, yshift=2em] (title) 
+    at (current bounding box.north)
+    {$k$-two-path ($U_k$)};
 
 %Lines
 
