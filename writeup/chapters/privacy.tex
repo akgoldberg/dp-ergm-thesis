@@ -83,8 +83,6 @@ A basic result in differential privacy is that adding Laplace noise scaled to th
 	where $Y_i  \stackrel{i.i.d.}{\sim} \Lap\left(\frac{GS_f}{\eps}\right)$ is $\eps$-differentially private.
 \end{theorem}
 Note that the Laplace mechanism scales noise to the \emph{global sensitivity}. While it is tempting to calibrate noise to local sensitivity, this does not protect privacy, because the noise level may disclose information about the underlying dataset. However, we can add noise scaled to a smooth upper bound on the local sensitivity, namely a function $S$ that is larger than the local sensitivity for all datasets and for which $\ln(S(\cdot))$ is not too sensitive. The smoothness is parameterized by $\beta$, where $\beta$ depends on $\eps$ and $\delta$:
-
-\newpage
 \begin{theorem}[Calibrating Noise to $\beta$-Smooth Upper Bound on Local Sensitivity \cite{NRS07}]
 \label{thm:smooth}
 A $\beta$-smooth upper bound on the local sensitivity of query $f$ is a function $S_{f, \beta}$ that satisfies:
