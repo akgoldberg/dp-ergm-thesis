@@ -19,6 +19,6 @@ rand.response.nw <- function(nw, p) {
   nw.mat <- as.matrix(abs(nw.mat - to.flip))
   diag(nw.mat) <- 0
   nw.new <- network(nw.mat, directed = FALSE)
-  return(nw.new)
+  return(copy.vertex.attrs(nw, nw.new))
 } 
 

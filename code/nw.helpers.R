@@ -41,3 +41,11 @@ get.statname <- function(ergm.name) {
     'gwdsp.fixed.0.5' = 'Alt k-Two-Path'
   )
 }
+
+copy.vertex.attrs <- function(nw.old, nw.new) {
+    for (attr in list.vertex.attributes(nw.old)) {
+    set.vertex.attribute(nw.new, attr, get.vertex.attribute(nw.old, attr)) 
+  }
+  delete.vertex.attribute(nw.new, 'vertex.names')
+  return(nw.new)
+}

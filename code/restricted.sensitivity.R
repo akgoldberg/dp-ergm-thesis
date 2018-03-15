@@ -4,25 +4,35 @@
 
 # Project the network to H_k and add noise to suff stats
 make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
-                                 dp.delta=NULL, proj=TRUE, labels.priv=FALSE) {
+                                 dp.delta=NULL, proj=TRUE, labels.priv=FALSE, attrs=NULL, 
+                                 eps.labels=1.) {
   # project network to H_k
   # get original network
   y.orig <- ergm.getnetwork(formula)
   
+  # project network to H_k
   if (proj) {
     d.hat <- NULL
-    # project network to H_k
+    
+    # edge projection
     if (privacy.type=="edge") y <- projection.edge(y.orig, dp.k)
+    # node projection
     if (privacy.type=="node") {
       out <- projection.node(y.orig, dp.k)
       y <- out$y
       d.hat <- out$d.hat
     }
-     # update formula with projection
-    formula <- nonsimp.update.formula(formula, y ~ ., from.new=TRUE)
   } else {
     y <- y.orig
   }
+  
+  # privatize labels
+  if (labels.priv) {
+    y <- private.labels(y, eps.labels, attrs)
+  }
+  
+  # update formula with projection
+  formula <- nonsimp.update.formula(formula, y ~ ., from.new=TRUE)
  
   model <- ergm.getmodel(formula, y)
   # draw laplace noise
@@ -56,7 +66,6 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
     }
     dp.epsilon <- dp.epsilonTot
   }
-  print(dp.epsilon)
 
   # split delta evenly between terms if it is given as scalar
   if (privacy.type == "node") {
@@ -92,7 +101,7 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
     param <- tail(terms[[t]]$inputs, 1)
     num.terms <- length(terms[[t]]$coef.names)
     
-    # edge-level privacy s
+    # edge-level privacy 
     if (privacy.type == 'edge') {
       if (name == 'edges') {
         noise.level[i] <- 1/dp.epsilon[t]
@@ -150,7 +159,6 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
     i <- i+num.terms
   }
   # draw Laplace noise to use
-  print(noise.level)
   noise.draw <- rlaplace(n = length(noise.level), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))
 }
@@ -177,15 +185,19 @@ projection.edge <- function(nw, dp.k) {
     }
     if(i%%1000==0) {
       nw.mat.sparse <- as.matrix.csr(nw.mat)
-      if (max(diag((nw.mat.sparse %*% nw.mat.sparse))) <= dp.k) return(network(nw.mat, directed=FALSE))
+      if (max(diag((nw.mat.sparse %*% nw.mat.sparse))) <= dp.k) break
     } 
   }
-  return(nw)
+  nw.out <- network(nw.mat, directed=FALSE)
+  nw.out <- copy.vertex.attrs(nw, nw.out)
+
+  return(nw.out)
 }
 
+#projection.node.trunc <- function(nw, dp.k) {}
 
 # projection into H_k for node-level privacy
-projection.node <- function(nw, dp.k) {
+projection.node.LP <- function(nw, dp.k) {
 
   tic("LP setup")
   
@@ -246,23 +258,52 @@ projection.node <- function(nw, dp.k) {
   nw.mat[to.remove,] <- 0
   nw.mat[,to.remove] <- 0
   y <- network(nw.mat, directed=FALSE)
+  y <- copy.vertex.attrs(nw, y)
   
   return(list("y" = y, "d.hat" = d.hat, "lp" = LP))
 }
 
-private.labels <- function(nw, eps) {
+# privatize labels in a network
+private.labels <- function(nw, eps, attrs=NULL) {
+  if (is.null(attrs)) {
+    label.df <- subset(rbindlist(lapply(nw$val, data.frame)), select=-na)
+  } else {
+    label.df <- subset(rbindlist(lapply(nw$val, data.frame)), select=attrs)
+  }
+  attrs <- colnames(label.df)
+  n <- dim(label.df)[1]
   # generate histogram of labels
-  nw <- faux.mesa.high
-  label.df <- subset(rbindlist(lapply(nw$val, data.frame)), select= -na)
   label.df <- data.frame(table(label.df))
   
   # add noise
-  noisyFreq <- label.df$Freq + rlaplace(n=dim(label.df)[1], scale=2.)
-  postproc <- sapply(round(noisyFreq), max, 0)
+  noisyFreq <- sapply(label.df$Freq + rlaplace(n=dim(label.df)[1], scale=1./eps), max, 0)
+  postproc <-round(noisyFreq)
   names(postproc) <-"Noisy.Freq.Fixed"
   names(noisyFreq) <- "Noisy.Freq"
   label.df <- cbind(label.df, noisyFreq, postproc)
-  return(label.df)
+  sort.order <- order(abs(label.df$noisyFreq - label.df$postproc), decreasing=TRUE)
+  label.df <- label.df[sort.order, ]
+  n.diff <- n-sum(label.df$postproc)
+  # postprocess
+  i <- 1
+  num.fixed <- 0
+  while (num.fixed < abs(n.diff)) {
+    i.touse <- i
+    if (i > dim(label.df)[1]) i.touse <- 1 + (i %% dim(label.df)[1])
+    # do not get negative counts
+    if (label.df$postproc[i.touse] + sign(n.diff) > 0) {
+      label.df$postproc[i.touse] <- label.df$postproc[i.touse] + sign(n.diff)
+      num.fixed <- num.fixed + 1
+    }
+    i <- i + 1
+  }
   # make nw
+  nw.out <- copy(nw)
+  delete.vertex.attribute(nw.out, list.vertex.attributes(nw.out))
+  for (attr in attrs) {
+    set.vertex.attribute(nw.out, attr, as.vector(rep(label.df[[attr]], label.df$postproc)))
+  }
+  return(nw.out)
 }
+
 

@@ -3,6 +3,9 @@
 \usepackage{graphicx}
 \graphicspath{ {figures/} }
 
+% title page spacing
+\usepackage{setspace}% http://ctan.org/pkg/setspace
+\usepackage{lipsum}% http://ctan.org/pkg/lipsum
 
 % page formatting
 \usepackage[a4paper, top=1in, bottom=1in, left=1in, right=1in]{geometry}
@@ -15,7 +18,7 @@
 \usepackage[hang,flushmargin]{footmisc}
 % TOC spacing
 \usepackage{tocloft} 
-%\setcounter{tocdepth}{1} % no subsections in TOC
+\setcounter{tocdepth}{1} % no subsections in TOC
 \setlength\cftparskip{1.0pt} 
 
 % Appendix

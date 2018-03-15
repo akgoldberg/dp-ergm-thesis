@@ -144,13 +144,6 @@ load.samples <- function(samp.id, start=100, stop=1000) {
 # generate.samples(5, theta=theta)
 
 
-
-
-
-
-
-
-
 ################################################################################
 ##             Compute Noise Added on Sample for Smooth vs. Restricted        ##
 ################################################################################

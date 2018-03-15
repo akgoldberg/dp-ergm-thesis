@@ -22,7 +22,7 @@ make.private.smooth <- function (formula, dp.epsilon, dp.delta, max.deg = NULL, 
 # draw Laplace noise with smooth sensitivity for multiple terms
 draw.lap.noise.smooth <- function (terms, dp.epsilonTot, dp.deltaTot, max.sp, max.deg) {
     # output vector of level of laplace noise to add
-  noise.level <- rep(NA, length(terms))
+   noise.level <- rep(NA,  length(unlist(lapply(terms, function(x) {x$coef.names}))))
 
   # split epsilon evenly between terms if it is given as scalar
   if (length(dp.epsilonTot == 1)) {
@@ -47,9 +47,12 @@ draw.lap.noise.smooth <- function (terms, dp.epsilonTot, dp.deltaTot, max.sp, ma
   }
 
   # calculate amount of noise to add for each term
+  i <- 1
   for (t in 1L:length(terms)) {
     name <- terms[[t]]$name
     param <- tail(terms[[t]]$inputs, 1)
+    num.terms <- length(terms[[t]]$coef.names)
+
     if (name == 'edges') {
     noise.level[[t]] <- 1/dp.epsilon[t]
     }
@@ -62,9 +65,19 @@ draw.lap.noise.smooth <- function (terms, dp.epsilonTot, dp.deltaTot, max.sp, ma
     if (name == 'gwdsp') {
     noise.level[[t]] <- draw.lap.noise.smooth.term(name, param, dp.epsilon[t], dp.delta[t], max.deg=max.deg)$level
     }
+
+    # label-dependant terms
+    if (name == 'nodematch') {
+        noise.level[i:(i+num.terms)] <- 1/dp.epsilon[t]
+    } 
+    if (name == 'nodefactor') {
+        noise.level[i:(i+num.terms)] <- 2/dp.epsilon[t]
+    }
+
+     i <- i+num.terms
   }
    # draw Laplace noise to use
-  noise.draw <- rlaplace(n = length(terms), scale = noise.level)
+  noise.draw <- rlaplace(n = length(noise.level), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))
 }
 
