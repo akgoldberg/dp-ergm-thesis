@@ -259,6 +259,7 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
     data('faux.mesa.high')
     nw <- faux.mesa.high
     dp.k <- 15
+    true.theta <- NULL
   }
   
   formula <- nonsimp.update.formula(formula.rhs, nw ~ ., from.new=TRUE)
