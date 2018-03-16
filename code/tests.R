@@ -281,7 +281,7 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   # setup up closure for parallel processing
   test.run <- function(t) {
     run.one.test(t, formula, n, dp.epsilon, dp.k, burn.in, main.iters, 
-                  sigma.epsilon, parallel, method)
+                  sigma.epsilon, parallel, method, labels.priv=labels.priv)
   }
   
   if (parallel) {
@@ -313,7 +313,6 @@ run.one.test <- function(t,
                          method,
                          print.out = 1000,
                          nchains = 3,
-                         labels.priv = NULL,
                          attrs = NULL) {
   
   print(sprintf("Test: %d", t))
