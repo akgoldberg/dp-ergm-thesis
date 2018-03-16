@@ -48,4 +48,4 @@ if (i==6) {
                                          burn.in=5000, main.iters=5000)
 }
     
-save(inference.tests, file=sprintf("inference.tests%d%s-eps%g", i, method, dp.epsilon))
+save(inference.tests, file=sprintf("inference.tests%d%s-eps%g", i, method, sum(dp.epsilon)))
