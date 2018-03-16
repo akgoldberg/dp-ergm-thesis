@@ -248,7 +248,7 @@ visualize.noise.tests <- function(tests.id,
 
 run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.tests = 10,
                                burn.in=10000, main.iters=10000, sigma.epsilon=NULL, parallel=TRUE, non.private=TRUE,
-                               method='restr', labels.priv=FALSE) {
+                               method='restr', labels.priv=FALSE, attrs=NULL) {
   
   if (samp.id <= 5) {
     samples <- load.samples(samp.id, start=n, stop=n)[[1]]
@@ -281,7 +281,7 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   # setup up closure for parallel processing
   test.run <- function(t) {
     run.one.test(t, formula, n, dp.epsilon, dp.k, burn.in, main.iters, 
-                  sigma.epsilon, parallel, method, labels.priv=labels.priv)
+                  sigma.epsilon, parallel, method, labels.priv, attrs)
   }
   
   if (parallel) {
@@ -311,9 +311,11 @@ run.one.test <- function(t,
                          sigma.epsilon,
                          parallel,
                          method,
+                         labels.priv,
+                         attrs,
                          print.out = 1000,
-                         nchains = 3,
-                         attrs = NULL) {
+                         nchains = 3
+                         ) {
   
   print(sprintf("Test: %d", t))
   if (!parallel) {
