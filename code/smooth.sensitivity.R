@@ -52,18 +52,19 @@ draw.lap.noise.smooth <- function (terms, dp.epsilonTot, dp.deltaTot, max.sp, ma
     name <- terms[[t]]$name
     param <- tail(terms[[t]]$inputs, 1)
     num.terms <- length(terms[[t]]$coef.names)
+    print(num.terms)
 
     if (name == 'edges') {
-    noise.level[[t]] <- 1/dp.epsilon[t]
+    noise.level[[i]] <- 1/dp.epsilon[t]
     }
     if (name == 'altkstar') {
-    noise.level[[t]] <- (2*(1./param))/dp.epsilon[t]
+    noise.level[[i]] <- (2*(1./param))/dp.epsilon[t]
     }
     if (name == 'gwesp') {
-    noise.level[[t]] <- draw.lap.noise.smooth.term(name, param, dp.epsilon[t], dp.delta[t], max.sp=max.sp)$level
+    noise.level[[i]] <- draw.lap.noise.smooth.term(name, param, dp.epsilon[t], dp.delta[t], max.sp=max.sp)$level
     }
     if (name == 'gwdsp') {
-    noise.level[[t]] <- draw.lap.noise.smooth.term(name, param, dp.epsilon[t], dp.delta[t], max.deg=max.deg)$level
+    noise.level[[i]] <- draw.lap.noise.smooth.term(name, param, dp.epsilon[t], dp.delta[t], max.deg=max.deg)$level
     }
 
     # label-dependant terms
@@ -76,6 +77,7 @@ draw.lap.noise.smooth <- function (terms, dp.epsilonTot, dp.deltaTot, max.sp, ma
 
      i <- i+num.terms
   }
+  print(noise.level)
    # draw Laplace noise to use
   noise.draw <- rlaplace(n = length(noise.level), scale = noise.level)
   return(list("level" = noise.level, "draw" = noise.draw))

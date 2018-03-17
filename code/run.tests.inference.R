@@ -44,7 +44,7 @@ if (i==6) {
   }
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
-                                         non.private=TRUE, num.tests=25, parallel=TRUE, attrs=c("Grade","Race"),
+                                         non.private=FALSE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
                                          burn.in=5000, main.iters=5000)
 }
     
