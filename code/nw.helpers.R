@@ -65,3 +65,4 @@ copy.vertex.attrs <- function(nw.old, nw.new) {
   delete.vertex.attribute(nw.new, 'vertex.names')
   return(nw.new)
 }
+

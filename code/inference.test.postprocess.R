@@ -35,7 +35,7 @@ get.summary.inference.tests <- function(model.id, method, dp.epsilon, test.id.st
   df.out <- data.frame("model.id"=numeric(), "method"=character(), "stat.name"=character(),
                    "eps"=numeric(), "delta"=numeric(),
                     "stat.value"=numeric(),  "AR"=numeric(),
-                   "post.mean"=numeric(), "post.se"=character(),
+                   "post.mean"=numeric(), "post.mean.med"=numeric(), "post.se"=numeric(), "post.sd"=numeric(),
                    "noise.draw"=numeric(), "noise.level"=character(), "KL"=numeric())
   if (is.null(true.theta)) {
     true.theta <- tests$true
@@ -57,7 +57,9 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
     
     statnames <- names(x$stats)
     row$post.mean <- apply(x$Theta,c(2),mean)
+    row$post.mean.med <- apply(apply(x$Theta,c(2,3),mean), 1, median)
     row$post.se <- getSE(x$Theta)
+    row$post.sd <- apply(Theta.out, 2, sd)
     names(row$post.mean) <- statnames
     names(row$post.se) <- statnames
     row$stat.value <- x$stats
@@ -84,7 +86,6 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
     df.row <- data.frame(row)
     setDT(df.row, keep.rownames = TRUE)
     setnames(df.row, 1, "stat.name") 
-    print(sprintf("Row len: %d", dim(df.row)[1]))
     return(df.row)
 }
 
@@ -105,6 +106,7 @@ computeKL <- function(formula, true.theta, theta.other) {
   return(llr)
 }
 
+
 # extract non-private tests from raw test data
 extract.nonprivate <- function(i) {
   tests <- load.inference.tests(i, "restr", 1.)
@@ -115,10 +117,12 @@ extract.nonprivate <- function(i) {
   save(nonprivate, file=fname)
 }
 
+# Load dfs for inference tests
 load.df.inference.tests <- function(i) {
   df.tests <- read.table(file = sprintf("obj/df/df.inference.tests%d.txt",i), sep = ",", header=TRUE)
 }
 
+# cut out cases with worst KL
 truncate.KL <- function(df.graph) {
   for (eps in unique(df.graph$eps)) {
     for (method in unique(df.graph$method)) {
