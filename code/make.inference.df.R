@@ -8,5 +8,6 @@ setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
 #setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
 source('libraries.R')
 
+extract.nonprivate(i)
 df.tests <- make.inference.df(i)
 write.table(df.tests, file = sprintf("df.inference.tests%d.txt",i), sep = ",", col.names = colnames(df.tests))

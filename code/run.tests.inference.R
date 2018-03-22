@@ -56,14 +56,14 @@ if (i==7) {
   
   #sigma.epsilon = NULL
   if (method != 'rr') {
-    dp.epsilon <- c(rep(dp.epsilon/10., 3), rep(dp.epsilon/6., 3))
+    dp.epsilon <- c(rep(dp.epsilon/12., 3), rep(dp.epsilon/4., 3))
     sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.00001, 0.00001, 0.000001))
   } else {
     sigma.epsilon = diag(c(0.001, rep(0.001, 3), 0.001, 0.001, 0.0001))
   }
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
-                                         non.private=FALSE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
+                                         non.private=TRUE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
                                          burn.in=10000, main.iters=10000)
 }
 
@@ -77,7 +77,7 @@ if (i==8) {
     sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.00001, 0.00001, 0.000001))
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
-                                         non.private=FALSE, num.tests=25, parallel=TRUE, attrs=c("Sex"),
+                                         non.private=TRUE, num.tests=25, parallel=TRUE, attrs=c("Sex"),
                                          burn.in=10000, main.iters=10000, labels.priv=TRUE)
 }
     
