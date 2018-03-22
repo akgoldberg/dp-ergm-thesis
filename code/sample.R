@@ -232,7 +232,7 @@ plot.noise.sample <- function(nws.samples, dp.epsilon, stat) {
 }
 
 # Plot the average noise level per sample
-plot.noise.samples <- function(nws.samples, title.string, stat, dp.epsilons = c(0.1, 0.5, 1.)) {
+plot.noise.samples <- function(nws.samples, stat, title.string, dp.epsilons = c(0.1, 0.5, 1.)) {
     plts <- list()
     i <- 1
     for (dp.epsilon in dp.epsilons) {
@@ -273,4 +273,62 @@ plot.noise.samples <- function(nws.samples, title.string, stat, dp.epsilons = c(
     prowlegend <- plot_grid(legend, prow, ncol=1, rel_heights = c(.2, 1))
     title <- ggdraw() + draw_label(title.string, fontface='bold', size = 12)
     plot_grid(title, prowlegend + theme(plot.margin = unit(c(-15,1,5,5), "pt")), ncol=1, rel_heights=c(0.1, 1))
+}
+
+
+# Summarize samples
+summarize.samples <- function(samp.ids = c(0,1,3,5)) {
+    df.rows <- data.frame()
+    for (id in samp.ids) {
+      samples <- load.samples(id)
+      print(sprintf("Loaded sample %d", id))
+      for (i in seq(1, 10)) {
+        row = list("n" = i*100, "samp.id" = sample.map.id(id))
+        row$density.mean <- mean(samples[[i]]$edge/choose(i*100,2))
+        row$triangles.mean <- mean(as.numeric(lapply(samples[[i]]$sample, network.triangles)))
+        row$deg.min <- min(samples[[i]]$deg)
+        row$deg.median <- median(samples[[i]]$deg)
+        row$deg.max <- max(samples[[i]]$deg)
+        df.row <- data.frame(row)
+        df.rows <- rbindlist(list(df.row, df.rows))
+      }
+    }
+    #write.table(df.summary.samples, file = sprintf("obj/df/samples.summarydf.txt",i), sep = ",", col.names = colnames(df.summary.samples))
+    return(df.rows)
+}
+
+plot.summary.samples <- function() {
+  df.summary.samples <- read.table(file = sprintf("obj/df/samples.summarydf.txt",i), sep = ",", header=TRUE)
+  plt.degs <- ggplot(data=df.summary.samples, mapping=aes(fill = factor(samp.id,levels = rev(unique(samp.id))))) +
+    geom_line(aes(x=n, y=deg.median), color="grey", linetype=2) +
+    geom_ribbon(aes(x=n, ymax=deg.max, ymin=deg.min), alpha=0.4) +
+    scale_x_continuous(name='n', breaks=seq(200, 1000, 200)) +
+    scale_y_continuous(name='Degree') +
+    scale_linetype_manual('', values = ltps) +
+    ggtitle("Degree of Simulated Networks") +
+    scale_fill_discrete(name = "Model") +
+    theme_gray() + 
+    theme(plot.title = element_text(size=12, face='plain', hjust = 0.5))
+  plt.tris <- ggplot(data=df.summary.samples, mapping=aes(color = factor(samp.id,levels = rev(unique(samp.id))))) +
+    geom_line(aes(x=n, y=triangles.mean)) +
+    scale_x_continuous(name='n', breaks=seq(200, 1000, 200)) +
+    scale_y_continuous(name='Number of Triangles') +
+    scale_linetype_manual('', values = ltps) +
+    ggtitle("Triangle Count of Simulated Networks") +
+    scale_color_discrete(name = "Model") +
+    theme_gray() + 
+    theme(plot.title = element_text(size=12, face='plain', hjust = 0.5))
+  plts <- plot_grid(plt.degs, plt.tris)
+  ggsave(filename = "plots/samples.summary.png", plot = plts, width=10, height=5)
+  return(plts)
+}
+
+sample.map.id <- function(sample.id) {
+  switch (as.character(sample.id),
+    '0' = 0,
+    '1' = 1,
+    '3' = 2,
+    '5' = 3,
+    '6' = 4
+  )
 }

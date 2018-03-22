@@ -1,4 +1,5 @@
-\subsubsection{Simulating Networks from an ERGM}
+\section{Simulating Networks from an ERGM}
+\label{sec:sim_ergm}
 
 First, we describe a simple MCMC method for simulating networks from an ERGM given parameters of the model. This method is used both to generate synthetic graphs in our experiments and to draw samples needed for inference.
 
@@ -18,9 +19,9 @@ First, we describe a simple MCMC method for simulating networks from an ERGM giv
 
 The acceptance ratio (assuming all pairs of nodes are chosen with equal probability) is just $ \exp \{\theta^T(u(x^*) - u(x^{(t-1)}))$. As the difference in sufficient statistics between two graphs differing in an edge (known as the ``change statistic'') is typically a simple function of the nodes participating in that edge, this ratio is easy to compute (for instance, for the edges sufficient statistic, it is always just $1$ if adding an edge and $-1$ if removing). 
 
- If an ERGM specification puts most of its probability mass on relatively sparse graphs, the sampler that proposes all pairs of nodes with equal probability in step 1 will reject the addition of an edge in most steps, leading to slow convergence. Therefore, Tie-No-Tie (TNT) sampling is generally used in step 1, where we first select either the set of edges or the set of non-edges with equal probability and then pairs of nodes are selected uniformly at random from within the chosen set, biasing step 1 to consider removing edges more frequently than adding (and accounting for the non-uniform proposal distribution in the acceptance ratio). Therefore, throughout this thesis we use TNT sampling to efficiently draw samples from ERGMs.
+ If an ERGM specification puts most of its probability mass on relatively sparse graphs, the sampler that proposes all pairs of nodes with equal probability in step 1 will reject the addition of an edge in most steps, leading to slow convergence. Therefore, Tie-No-Tie (TNT) sampling is generally used in step 1, where we first select either the set of edges or the set of non-edges with equal probability and then pairs of nodes are selected uniformly at random from within the chosen set, biasing step 1 to consider removing edges more frequently than adding (and accounting for the non-uniform proposal distribution in the acceptance ratio). Therefore, throughout this thesis we use TNT sampling to efficiently draw samples from ERGMs. \cite{LKR12}
 
-\subsubsection{Population MCMC Version of the Exchange Algorithm}
+\section[Population MCMC Version of the Exchange Algorithm]{Population MCMC Version of the \\Exchange Algorithm}
 
 The basic exchange algorithm for Bayesian inference over ERGMs can be easily modified to take advantage of population MCMC methods, which tend to converge faster, since using various chains reduces temporal dependency between time-steps in the Markov Chain. In particular, Caimo and Friel propose using parallel ADS, which maintains a collection of $H$ chains that interact with one another.
 
@@ -48,5 +49,5 @@ The basic exchange algorithm for Bayesian inference over ERGMs can be easily mod
 	\end{align*}
 \end{algorithm}
 
-The MH acceptance ratio reamins the same as in the single-site update, because the proposal distribution is still symmetric -- making the reverse jump from $\theta_h^*$ to $\theta_h^{(t-1)}$ simply requires reversing $\epsilon$ and the order of $h_1$ and $h_2$. The tuning parameter $\gamma$ controls the amount of interaction between chains and is generally taken to be in the range $0.5$ and $1$ (in this case we take $\gamma = 0.5$ throughout.) Additionally, the number of chains to use can be tuned in inference, but we choose to use $3$ chains throughout as this seems to lead to convergence.
+The MH acceptance ratio reamins the same as in the single-site update, because the proposal distribution is still symmetric -- making the reverse jump from $\theta_h^*$ to $\theta_h^{(t-1)}$ simply requires reversing $\epsilon$ and the order of $h_1$ and $h_2$. The tuning parameter $\gamma$ controls the amount of interaction between chains and is generally taken to be in the range $0.5$ and $1$ (in this case we take $\gamma = 0.5$ throughout.) Additionally, the number of chains to use can be tuned in inference, but we choose to use $3$ chains throughout as this seems to lead to fast convergence.
 

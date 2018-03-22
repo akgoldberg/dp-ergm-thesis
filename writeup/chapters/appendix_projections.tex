@@ -1,6 +1,6 @@
 \section{Edge-Adjacency Model}
 
-Blocki et. al give an efficient projection to $\H_k$ in the edge-adjacency model with $GS_\mu = 3$  \cite{BBDS13}:
+Blocki et al. give an efficient projection to $\H_k$ in the edge-adjacency model with $GS_\mu = 3$  \cite{BBDS13}:
 
 \begin{algorithm}[!ht]
 	\caption{3-smooth Projection to $\H_k$ for Edge-Adjacency Model}
@@ -24,7 +24,7 @@ Intuitively, we keep only the first $k$ edges in the canonical ordering for any 
 
 \subsection*{Naive Truncation}
 
-The naive truncation projection $\mu_{trunc}: \G_n \to \H_{k}$ proposed by Kasiviswanathan et. al. simply removes all nodes from the graph with degree above the cutoff $k$ \cite{KNRS13}. It is clear, then, that $\mu_{trunc}$ maps any graph in $\H_k$ to itself and that its image is $\H_k$. Moreover, $\mu_{trunc}$ is quite efficient, requiring $O(n + \binom{n}{2})$ time. It is also fairly simple to characterize the smooth sensitivity of $\mu_{trunc}$. First, note that the local sensitivity of $\mu_{trunc}$ on graph $G$ is $1 + D_k(G) + D_{k+1}(G)$ where  $D_{i}$ is the number of nodes of degree $i$ in graph $G$ since rewiring one node in the graph may affect whether all nodes of degree $k$ or $k+1$ are truncated by $\mu_{trunc}$. We an characterize the smooth sensitivity as follows:
+The naive truncation projection $\mu_{trunc}: \G_n \to \H_{k}$ proposed by Kasiviswanathan et. al. simply removes all nodes from the graph with degree above the cutoff $k$ \cite{KNRS13}. It is clear, then, that $\mu_{trunc}$ maps any graph in $\H_k$ to itself and that its image is $\H_k$. Moreover, $\mu_{trunc}$ is quite efficient, requiring $O(n + \binom{n}{2})$ time. It is also fairly simple to characterize the smooth sensitivity of $\mu_{trunc}$. First, note that the local sensitivity of $\mu_{trunc}$ on graph $G$ is $1 + D_k(G) + D_{k+1}(G)$ where  $D_{i}$ is the number of nodes of degree $i$ in graph $G$ since rewiring one node in the graph may affect whether all nodes of degree $k$ or $k+1$ are truncated by $\mu_{trunc}$. We can characterize the smooth sensitivity as follows:
 
 \begin{proposition}[Smooth Sensitivity of $\mu_{trunc}$ \cite{KNRS13}]
 Given graph $G$ and hypothesis $\H_k$, let $N_t(G)$ denote the number of nodes with degrees in the range $[k - t, k+ t+ 1]$ and let $C_t = 1 + t+ N_t(G)$. Then:
@@ -42,7 +42,7 @@ Thus, we can compute $\beta$-smooth sensitivity efficiently using either part $3
 
 \subsection*{LP-Based Projection}
 
-Blocki et. al. propose a projection using linear programming. Their method satisfies a relaxed definition of a projection, where $\mu_{LP} : \G_n \to \H_{2k}$ and $\forall G \in \H_{k}$, $\mu(G) = G$, (but graphs in $\H_k$ are not necessarily mapped to themselves). Because the image is $\H_{2k}$, their method requires calibrating the restricted sensitivity to $\H_{2k}$. However, in contrast to naive truncation, their approach guarantees that graphs in $\H_k$ always have low smooth sensitivity, because their algorithm outputs an estimator of the distance between a graph and its projection, used to compute a $\beta$-smooth upper bound, where the distance estimator is always $0$ for graphs in $\H_k$.
+Blocki et al. propose a projection using linear programming. Their method satisfies a relaxed definition of a projection, where $\mu_{LP} : \G_n \to \H_{2k}$ and $\forall G \in \H_{k}$, $\mu(G) = G$, (but graphs in $\H_k$ are not necessarily mapped to themselves). Because the image is $\H_{2k}$, their method requires calibrating the restricted sensitivity to $\H_{2k}$. However, in contrast to naive truncation, their approach guarantees that graphs in $\H_k$ always have low smooth sensitivity, because their algorithm outputs an estimator of the distance between a graph and its projection, used to compute a $\beta$-smooth upper bound, where the distance estimator is always $0$ for graphs in $\H_k$.
 
 The algorithm is also less efficient than naive truncation as it requires solving a  linear program with $n + \binom{n}{2}$ decision variables: a variable $x_u$ per node $u$ representing whether node $u$ should be removed from the projected graph or not and a variable $w_{u,v}$ per edge $(u,v)$ representing whether the edge from $u$ to $v$ remains in the projected graph:
 

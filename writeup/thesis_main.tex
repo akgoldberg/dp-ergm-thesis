@@ -7,7 +7,7 @@
 
 % Title page
 \title{
-	\textbf{Towards Differentially Private Inference on Social Network Data} \\[1.5em]
+	\textbf{Towards Differentially Private Inference on Network Data} \\[1.5em]
 	}
 \author{ 
 				A thesis presented  \\[0.1em]
@@ -44,12 +44,14 @@
 	\end{abstract}
 	
 	\tableofcontents
+	\addtocontents{toc}{\protect\thispagestyle{empty}}
 	%\listoffigures
 	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% 												Introduction													 %
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	\chapter{Introduction}\label{ch:intro}
+	\setcounter{page}{1}
 	\input{chapters/introduction}
 	
 	
@@ -64,7 +66,7 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% 												Privacy													 			%
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	\chapter{Differential Privacy over Networks}\label{ch:dp_defns}
+	\chapter{Differential Privacy for Networks}\label{ch:dp_defns}
 	
 	\input{chapters/privacy}
 	
@@ -119,7 +121,7 @@
 		
 		\appendix
 		
-		\chapter{MCMC Methods Used in Bayesian Inference over ERGMs}\label{appendix_mcmc}
+		\chapter{MCMC Methods for Bayesian Inference over ERGMs}\label{appendix_mcmc}
 		
 		\input{chapters/appendix_mcmc}
 		

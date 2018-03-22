@@ -37,8 +37,9 @@ if (i==6) {
     + nodematch("Race",diff=TRUE) + nodematch("Sex",diff=FALSE) + altkstar(1.0,fixed=TRUE)
     + gwesp(1.0,fixed=TRUE) + gwdsp(1.0,fixed=TRUE))
   
+  
+  
   sigma.epsilon = diag(c(0.00005, rep(0.00001, 11), 0.00001, 0.00001, 0.000001))
-  #sigma.epsilon = NULL
   if (method != 'rr') {
     dp.epsilon <- c(rep(dp.epsilon/10., 5), rep(dp.epsilon/6., 3))
   }
@@ -46,6 +47,24 @@ if (i==6) {
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                          non.private=FALSE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
                                          burn.in=5000, main.iters=5000)
+}
+
+if (i==7) {
+  form.rhs <- formula(~edges + nodefactor("Sex",  base=0)
+                      + nodematch("Sex",diff=FALSE) + altkstar(1.0,fixed=TRUE)
+                      + gwesp(1.0,fixed=TRUE) + gwdsp(1.0,fixed=TRUE))
+  
+  #sigma.epsilon = NULL
+  if (method != 'rr') {
+    dp.epsilon <- c(rep(dp.epsilon/10., 3), rep(dp.epsilon/6., 3))
+    sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.00001, 0.00001, 0.000001))
+  } else {
+    sigma.epsilon = diag(c(0.001, rep(0.001, 3), 0.001, 0.001, 0.0001))
+  }
+  inference.tests <- run.inference.tests(i, 205, form.rhs,
+                                         dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
+                                         non.private=FALSE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
+                                         burn.in=10000, main.iters=10000)
 }
     
 save(inference.tests, file=sprintf("inference.tests%d%s-eps%g", i, method, sum(dp.epsilon)))

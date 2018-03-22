@@ -173,7 +173,7 @@ run.noise.tests.smooth <- function(sample, dp.epsilon, dp.delta) {
 
 # visualize results of test
 visualize.noise.tests <- function(tests.id,
-                                  dp.klevels=c('min','median','max'),
+                                  dp.klevels=c('min','median','conservative'),
                                   stat.names=c('edges', 'altkstar.0.5', 'gwesp.fixed.0.5', 'gwdsp.fixed.0.5')) {
   df.samples <- data.table(read.table(file=sprintf("obj/df/df.samples%d.txt",tests.id), sep = ",", header=TRUE))
   
@@ -181,7 +181,8 @@ visualize.noise.tests <- function(tests.id,
   df.samples$type = revalue(df.samples$type, c('smooth' = 'private local'))
   
   # get epsilon values in dataframe
-  eps.values <- unique(df.samples$eps)
+  #eps.values <- unique(df.samples$eps)
+  eps.values <- c(0.5)
   
   # get line type to use (dotted for smooth)
   ltps <- rep(1, length(dp.klevels)+1)
@@ -203,7 +204,8 @@ visualize.noise.tests <- function(tests.id,
            guides(shape=FALSE) +
            scale_x_continuous(name='n', breaks=seq(min(df.data$n),max(df.data$n), 200)) +
            scale_y_continuous(name='RMSE') +
-           scale_color_brewer('', type='seq', palette = 'YlGnBu', direction=0.5) + 
+           #scale_color_brewer('', type='seq', palette = 'YlGnBu', direction=0.5) + 
+           scale_color_brewer('', palette = "Set1") +
            scale_linetype_manual('', values = ltps) +
            ggtitle(bquote(paste(epsilon, "=",.(this.eps)))) +
            theme_gray() + 
@@ -232,11 +234,12 @@ visualize.noise.tests <- function(tests.id,
     # hide legends on plots
     plts <- lapply(plts, function (plt)  plt + theme(legend.position="none"))
     # put everything together
-    plot.name <- sprintf("Model %d - %s", tests.id, get.statname(this.stat.name))
+    plot.name <- sprintf("Model %d - %s", sample.map.id(tests.id), get.statname(this.stat.name))
     title <- ggdraw() + draw_label(plot.name, fontface='bold', size = 12)
     prow <- plot_grid(plotlist=plts)
-    final.plt <- plot_grid(title, prow, legend, ncol=1, rel_heights = c(.1, 1., .15))
-    ggsave(filename = sprintf("plots/noise.final/%s.png", plot.name), plot = final.plt)
+    #final.plt <- plot_grid(title, prow, legend, ncol=1, rel_heights = c(.1, 1., .15))
+    final.plt <- plot_grid(title, prow, ncol=1, rel_heights = c(.1, 1.))
+    ggsave(filename = sprintf("plots/noise.to.use/brief%s.png", plot.name), width=10, height=5, plot = final.plt)
   }
 }
 

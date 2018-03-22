@@ -15,6 +15,7 @@ library(cowplot)
 library(parallel)
 library(coda)
 library(plyr)
+library(scales)
 
 source('nw.helpers.R')
 source('restricted.sensitivity.R')
