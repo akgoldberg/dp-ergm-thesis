@@ -69,7 +69,7 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
   
     # get rid of 0's
     true.theta <- true.theta[true.theta != 0]
-    row$KL <- computeKL(x$formula, true.theta, row$post.mean) 
+    row$KL <- computeKL(x$formula, true.theta, row$post.mean.med) 
     
     # non-private test inference run
     if (test.num == 0) {
@@ -166,7 +166,8 @@ visualize.inference.tests <- function(tests.id) {
   ggsave(filename = sprintf('plots/inference/KLplot%d.png', sample.map.id(tests.id)), plot = plt.KL)
   # MAE plots
   
-  df.tests$squared.error <- (df.tests$post.mean - df.tests$true.param.value)**2
+  #### CAN USE post.mean or post.mean.med here...)
+  df.tests$squared.error <- (df.tests$post.mean.med - df.tests$true.param.value)**2
   df.tests <- data.table(df.tests)
   rel.mae.df <- unique(df.tests[stat.value != 0, (mean(sqrt(squared.error)/(abs(true.param.value)))), by=list(method, eps, stat.name)])
   nonpriv <- rel.mae.df[method=='nonprivate', list(stat.name, V1)]
