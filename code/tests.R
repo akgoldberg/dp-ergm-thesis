@@ -324,6 +324,7 @@ run.one.test <- function(t,
   if (!parallel) {
     tic()
   }
+
   if (method == "smooth") {
     dp.delta <- 1e-6
     nw.private <- make.private.smooth(formula, dp.epsilon, dp.delta)

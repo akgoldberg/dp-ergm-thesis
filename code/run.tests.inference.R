@@ -73,8 +73,8 @@ if (i==8) {
                       + gwesp(1.0,fixed=TRUE) + gwdsp(1.0,fixed=TRUE))
   
 
-   dp.epsilon <- c(rep(dp.epsilon/12., 3), rep(dp.epsilon/4., 3))
-    sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.00001, 0.00001, 0.000001))
+  dp.epsilon <- c(dp.epsilon/10., rep(dp.epsilon/5., 2), dp.epsilon/10., rep(dp.epsilon/5., 2))
+  sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.00001, 0.00001, 0.000001))
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                          non.private=TRUE, num.tests=25, parallel=TRUE, attrs=c("Sex"),

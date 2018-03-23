@@ -28,7 +28,7 @@ make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
   
   # privatize labels
   if (labels.priv) {
-    y <- private.labels(y, eps.labels, attrs)
+    y <- private.labels(y, eps.labels, attrs=attrs)
   }
   
   # update formula with projection
@@ -127,7 +127,7 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
         if (!labels.priv) {
           noise.level[i:(i+num.terms)] <- 2/dp.epsilon[t]
         } else {
-          noise.level[i:(i+num.terms)] <- 3*2*dp.k/dp.epsilon[t]
+          noise.level[i:(i+num.terms)] <- 3*1*dp.k/dp.epsilon[t]
         }
       }
     }
@@ -274,12 +274,11 @@ private.labels <- function(nw, eps, attrs=NULL) {
   n <- dim(label.df)[1]
   # generate histogram of labels
   label.df <- data.frame(table(label.df))
+  colnames(label.df) <- c("attr", "Freq")
   
   # add noise
   noisyFreq <- sapply(label.df$Freq + rlaplace(n=dim(label.df)[1], scale=1./eps), max, 0)
   postproc <-round(noisyFreq)
-  names(postproc) <-"Noisy.Freq.Fixed"
-  names(noisyFreq) <- "Noisy.Freq"
   label.df <- cbind(label.df, noisyFreq, postproc)
   sort.order <- order(abs(label.df$noisyFreq - label.df$postproc), decreasing=TRUE)
   label.df <- label.df[sort.order, ]
@@ -299,9 +298,9 @@ private.labels <- function(nw, eps, attrs=NULL) {
   }
   # make nw
   nw.out <- copy(nw)
-  delete.vertex.attribute(nw.out, list.vertex.attributes(nw.out))
+  #delete.vertex.attribute(nw.out, list.vertex.attributes(nw.out))
   for (attr in attrs) {
-    set.vertex.attribute(nw.out, attr, as.vector(rep(label.df[[attr]], label.df$postproc)))
+    set.vertex.attribute(nw.out, attr, as.vector(rep(label.df$attr, label.df$postproc)))
   }
   return(nw.out)
 }
