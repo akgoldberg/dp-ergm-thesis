@@ -62,7 +62,10 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
     row$post.sd <- apply(x$Theta, 2, sd)
     names(row$post.mean) <- statnames
     names(row$post.se) <- statnames
+    names(row$post.mean.med) <- statnames
+     names(row$post.sd) <- statnames
     row$stat.value <- x$stats
+    true.theta <- true.theta[true.theta != 0]
     row$true.param.value <- true.theta
     row$AR <- mean(x$AR)
 
