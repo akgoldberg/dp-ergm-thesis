@@ -59,7 +59,7 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
     row$post.mean <- apply(x$Theta,c(2),mean)
     row$post.mean.med <- apply(apply(x$Theta,c(2,3),mean), 1, median)
     row$post.se <- getSE(x$Theta)
-    row$post.sd <- apply(Theta.out, 2, sd)
+    row$post.sd <- apply(x$Theta, 2, sd)
     names(row$post.mean) <- statnames
     names(row$post.se) <- statnames
     row$stat.value <- x$stats
