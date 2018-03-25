@@ -3,7 +3,7 @@
 ################################################################################
 
 # run tests comparing noise of smooth and restricted
-run.noise.tests <- function(samples, dp.epsilons, dp.delta=1e-6, stop=1000) {
+run.noise.tests <- function(samples, dp.epsilons, dp.delta=1e-6, stop=1000, node=FALSE) {
   # dataframe to output
   df <- data.frame("n"=numeric(), "type"=character(), "stat.name"=character(),
                    "dp.k"=numeric(), "eps"=numeric(), "delta"=numeric(),
@@ -19,15 +19,22 @@ run.noise.tests <- function(samples, dp.epsilons, dp.delta=1e-6, stop=1000) {
     print(sprintf("Testing samples of size %d", sample$n))
     for (dp.epsilon in dp.epsilons) {
           print(sprintf("Epsilon=%g", dp.epsilon))
-          tic("Restricted")
-          df <- rbindlist(list(df, run.noise.tests.restr(sample, dp.epsilon)),
-                          use.names=TRUE, fill=TRUE)
-          toc()
+          if (node) {
+            tic()
+            df <- rbindlist(list(df, run.noise.tests.node(sample, dp.epsilon, dp.delta)),
+                            use.names=TRUE, fill=TRUE)
+            toc()
+          } else {
+            tic("Restricted")
+            df <- rbindlist(list(df, run.noise.tests.restr(sample, dp.epsilon)),
+                            use.names=TRUE, fill=TRUE)
+            toc()
 
-          tic("Smooth")
-          df <- rbindlist(list(df, run.noise.tests.smooth(sample, dp.epsilon, dp.delta)),
-                          use.names=TRUE, fill=TRUE)
-          toc()
+            tic("Smooth")
+            df <- rbindlist(list(df, run.noise.tests.smooth(sample, dp.epsilon, dp.delta)),
+                            use.names=TRUE, fill=TRUE)
+            toc()
+          }
       }
     }
   return(df)
@@ -171,6 +178,53 @@ run.noise.tests.smooth <- function(sample, dp.epsilon, dp.delta) {
   return(df.row)
 }
 
+get.node.projection.bias <- function(sample) {
+   # test (min, median, max, 1.5*max)
+  dp.ks <- c(min(sample$deg), median(sample$deg), max(sample$deg), 1.5*max(sample$deg))
+  dp.klevels <- c("min", "median", "max", "conservative")
+ 
+  # collect data frames for different k
+  df.rows <- data.frame()
+
+  for (iter in 1:length(dp.ks)) {
+    dp.k <- dp.ks[iter]
+    
+    # set up row to add to dataframe
+    row <- list()
+    row$n <- sample$n
+    row$dp.k <- dp.k
+    row$dp.klevel <- dp.klevels[iter]
+
+    N <- length(sample)
+    # iterate over nws in the sample
+    for (i in 1:N) {
+      nw <- sample$sample[[i]]
+      true.stats <- summary(nw  ~ edges + altkstar(0.5, fixed=TRUE) + gwesp(0.5, fixed=TRUE) + gwdsp(0.5, fixed=TRUE))
+      # if over-estimated degree, then don't need to get expected bias
+      if (dp.k >= sample$deg[i]) {
+        bias <- 0
+        d.hat <- 0
+      } 
+      else {
+        out <- projection.node.LP(nw, dp.k)
+        nw.proj <- out$y
+        d.hat <- out$d.hat
+        proj.stats <- summary(nw.proj  ~ edges + altkstar(0.5, fixed=TRUE) + gwesp(0.5, fixed=TRUE) + gwdsp(0.5, fixed=TRUE))
+        bias <- (proj.stats - true.stats)
+      }
+    }
+
+    row$bias <- bias
+    row$d.hat <- d.hat
+    df.row <- data.frame(row)
+    setDT(df.row, keep.rownames = TRUE)
+    setnames(df.row, 1, "stat.name") 
+    df.rows <- rbindlist(list(df.row, df.rows))
+  }
+
+  return(df.rows)
+}
+
 # visualize results of test
 visualize.noise.tests <- function(tests.id,
                                   dp.klevels=c('min','median','conservative'),
@@ -182,7 +236,7 @@ visualize.noise.tests <- function(tests.id,
   
   # get epsilon values in dataframe
   #eps.values <- unique(df.samples$eps)
-  eps.values <- c(0.5)
+  eps.values <- c(1.0)
   
   # get line type to use (dotted for smooth)
   ltps <- rep(1, length(dp.klevels)+1)
@@ -200,28 +254,28 @@ visualize.noise.tests <- function(tests.id,
         plts[[i]] <- 
           ggplot(data=df.data, mapping=aes(x =n, y=rmse, color=gsub(" NA", "", paste(type, dp.klevel)), linetype=gsub(" NA", "", paste(type, dp.klevel)))) +
            geom_point() +
-           geom_line() +
+           geom_line(size=1.25) +
            guides(shape=FALSE) +
            scale_x_continuous(name='n', breaks=seq(min(df.data$n),max(df.data$n), 200)) +
            scale_y_continuous(name='RMSE') +
            #scale_color_brewer('', type='seq', palette = 'YlGnBu', direction=0.5) + 
            scale_color_brewer('', palette = "Set1") +
            scale_linetype_manual('', values = ltps) +
-           ggtitle(bquote(paste(epsilon, "=",.(this.eps)))) +
+           ggtitle(bquote(paste(epsilon, "=",.(this.eps/4.)))) +
            theme_gray() + 
-           theme(plot.title = element_text(size=12, face='plain', hjust = 0.5))
+           theme(plot.title = element_text(size=16, face='plain', hjust = 0.5), axis.text=element_text(size=14, angle=45, hjust=1, vjust=1), axis.title=element_text(size=14))
     }
     df.statvalues <- unique(df.samples[stat.name==this.stat.name, n, stat.value])
     # make plot of stat value
     plts[[length(eps.values)+1]] <- 
       ggplot(data=df.data, mapping=aes(x =n, y=stat.value)) +
         geom_point() +
-        geom_line() +
+        geom_line(size=1.25) +
         scale_x_continuous(name='n', breaks=seq(min(df.data$n),max(df.data$n), 200)) +
         scale_y_continuous(name='Value') +
         ggtitle("True Statistic") +
         theme_gray() +
-        theme(plot.title = element_text(size=12, face='plain', hjust = 0.5))
+        theme(plot.title = element_text(size=16, face='plain', hjust = 0.5), axis.text=element_text(size=14, angle=45, hjust=1, vjust=1), axis.title=element_text(size=14))
     
     # get legend from plot
     legend <- get_legend(plts[[1]] +
@@ -235,11 +289,11 @@ visualize.noise.tests <- function(tests.id,
     plts <- lapply(plts, function (plt)  plt + theme(legend.position="none"))
     # put everything together
     plot.name <- sprintf("Model %d - %s", sample.map.id(tests.id), get.statname(this.stat.name))
-    title <- ggdraw() + draw_label(plot.name, fontface='bold', size = 12)
+    #title <- ggdraw() + draw_label(plot.name, fontface='bold', size = 12)
     prow <- plot_grid(plotlist=plts)
     #final.plt <- plot_grid(title, prow, legend, ncol=1, rel_heights = c(.1, 1., .15))
-    final.plt <- plot_grid(title, prow, ncol=1, rel_heights = c(.1, 1.))
-    ggsave(filename = sprintf("plots/noise.to.use/brief%s.png", plot.name), width=10, height=5, plot = final.plt)
+    #final.plt <- plot_grid(title, prow, ncol=1, rel_heights = c(.1, 1.))
+    ggsave(filename = sprintf("plots/noise.to.use/brief%s.png", plot.name), width=10, height=5, plot = prow)
   }
 }
 
@@ -359,8 +413,78 @@ load.inference.tests <- function(i, method, dp.epsilon) {
 }
 
 
+###############################################################################
+##                      Node Level Noise Tests                               ##
+###############################################################################
 
+run.noise.node.tests <- function(samples, dp.epsilons=c(1.0, 2.0, 3.0), dp.delta=1e-6, stop=1000) {
+  # dataframe to output
+  df <- data.frame()
+  
+  # iterate over all samples (over synthetic networks of size n=100,200,...)
+  for (sample in samples) {
+    if (sample$n > stop) {
+      break
+    }
+    print(sprintf("Testing samples of size %d", sample$n))
+    df <- rbindlist(list(df, run.sample.noise.test.node(sample, dp.epsilons, dp.delta)),
+                    use.names=TRUE, fill=TRUE)
+    }
+  return(data.table(df))
+}
 
+run.sample.noise.test.node <- function(sample, dp.epsilons, dp.delta) {
+    df <- data.frame()
 
+    # setup potential ks to test
+    dp.ks <- c(min(sample$deg), median(sample$deg), max(sample$deg), 1.5*max(sample$deg))
+    dp.klevels <- c("min", "median", "max", "conservative")
+    
+    N <- length(sample)
+    
+    for (projection.type in c('LP', 'Trunc')) {
+      tic(sprintf("%s Projection", projection.type))
+      # iterate over values of cutoff k
+      for (k in 1:length(dp.ks)) {
+        dp.k <- dp.ks[k]
+        dp.klevel <- dp.klevels[k]
+        # iterate over nws in the sample
+        for (i in 1:N) {
+          nw <- sample$sample[[i]]
+          # get projection
+          if (projection.type == 'LP')  {
+            proj.out <- projection.node.LP(nw, dp.k)
+            proj.aux.info <- proj.out$d.hat
+          }
+          if (projection.type == 'Trunc') {
+            proj.out <- projection.node.trunc(nw, dp.k)
+            proj.aux.info <- proj.out$Cs
+          }
+          formula <- formula(nw  ~ edges + altkstar(0.5, fixed=TRUE) + gwesp(0.5, fixed=TRUE) + gwdsp(0.5, fixed=TRUE))
+          true.stats <- summary(formula)
+          proj.stats <- summary(proj.out$y  ~ edges + altkstar(0.5, fixed=TRUE) + gwesp(0.5, fixed=TRUE) + gwdsp(0.5, fixed=TRUE))
+          terms <- ergm.getmodel(formula, nw)$terms
+          
+          for (noise.type in c('lap', 'cauchy')) {
+            for (dp.epsilon in dp.epsilons) {
+              row <- list("n"=sample$n, "i"=i, "dp.klevel"=dp.klevel, "proj.type"=projection.type, "noise.type"=noise.type,
+                           "dp.epsilon"=dp.epsilon/4., "dp.k"=dp.k, "true.stats"=true.stats, "bias"=(proj.stats-true.stats))
+              # draw laplace noise
+              noise <- draw.lap.noise.restricted(terms, dp.epsilon, dp.k, privacy.type='node',
+                          dp.deltaTot=dp.delta, proj.type=projection.type, noise.type=noise.type, proj.aux.info=proj.aux.info)
+              row$smooth.sens <- noise$C
+              row$noise.scale <- noise$level
 
-
+              # make into a df and add on to current df
+              df.row <- data.frame(row)
+              setDT(df.row, keep.rownames = TRUE)
+              setnames(df.row, 1, "stat.name") 
+              df <- rbindlist(list(df, df.row), use.names=TRUE, fill=TRUE)
+            }
+          }
+        }
+      }
+    toc()
+    }
+    return(df)
+}

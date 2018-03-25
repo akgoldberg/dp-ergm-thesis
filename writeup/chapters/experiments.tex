@@ -1,13 +1,12 @@
- Because the convergence properties and accuracy of non-private inference methods for ERGMs are primarily studied via empirical testing, we evaluate our proposed methods for differentially private inference experimentally. We conduct a battery of tests, both on synthetic graphs drawn from a variety of ERGM models and on a high school friend network with nodes labeled by the sex and race of students. Comparing the noise-addition of our method against private bounding of local sensitivity and the inference quality against both private bounding of local sensitivity and randomized response, we demonstrate that our method gives better utility at low privacy budgets of around $\eps =1$ compared to competing methods. Then, we compare the inference quality of our proposed methods against non-private inference for the cases of private labels with edge-level privacy and the case of node-level privacy to demonstrate the viability of inference under these stronger privacy constraints.
+  The performance of inference methods for ERGMs is primarily studied via empirical testing. Therefore, we experimentally evaluate the utility of our proposed methods for differentially private inference. We conduct a series of tests, both on synthetic graphs drawn from a variety of ERGM models and on a high school friend network dataset collected by sociologists. In the edge-level privacy model, we compare the noise-addition of our method against private bounding of local sensitivity. Then, we compare the inference quality of our proposed restricted sensitivity method against both private bounding of local sensitivity and randomized response. We find that our method gives better utility at low privacy budgets of $\eps =1$ or $2$ compared to competing methods in the edge-level model which can only provide useful inference for values of $\epsilon$ of $3$ or above. Next, we compare the inference quality of our proposed methods against non-private inference for the cases of private labels with edge-level privacy and the case of node-level privacy. We demonstrate the viability of inference for large, highly sparse, networks, under these stronger privacy constraints.
  
  \section{Experimental Setup}
  
- \subsection*{Data}
- 	We test our proposed methods on networks drawn from $3$ different ERGM models using the alternating structural sufficient statistics introduced in $\Cref{sec:alt_stats}$ so the probability distribution has the form:
- 	$$\Pr(x | \theta) = \exp\left\{\theta_1 E(x) + \theta_2 u_\lambda^{(s)}(x) + \theta_3 u_\gamma^{(t)}(x)  + \theta_4 u_\gamma^{(p)}(x) - \psi(\theta)  \right\} $$
+ \subsubsection*{Data}
+ 	We test our proposed methods on networks drawn from $3$ different ERGM models using the alternating structural sufficient statistics introduced in \Cref{sec:alt_stats} so the probability distribution has the form:
+ 	$$\Pr(x | \theta) \propto \exp\left\{\theta_1 E(x) + \theta_2 u_\lambda^{(s)}(x) + \theta_3 u_\gamma^{(t)}(x)  + \theta_4 u_\gamma^{(p)}(x)\right\} $$
  	 with the following parameters for each model:
  	\begin{table}[!ht]
- 		\label{table:ergm_params}
  		\centering
  		\begin{tabular}{|c|c|c|c|c|}
  			\hhline{|=====|}
@@ -18,12 +17,12 @@
 			\hhline{|=====|}
  		\end{tabular}
  	\caption{Parameters of Synthetic Networks}
+ 	\label{table:ergm_params}
  	\end{table}
  
- 	 We fix the edge parameter at $-4.6$, because in the absence of any other sufficient statistics this corresponds to a $G(n,p)$ model with $p = 1\%$, leading to sparse networks. Then, the other parameters are chosen based on reasonable choices of these parameters from analyses of real network data, with Model $1$ being a simple model adding only the alt $k$-triangle parameter and Model $3$ being the most complex including all structural parameters. 
+ 	 We fix the edge parameter at $-4.6$, because in the absence of any other sufficient statistics this corresponds to a $G(n,p)$ model with $p = 1\%$, leading to sparse networks. Then, the other parameters are chosen based on reasonable choices of these parameters from analyses of real network data, with Model $1$ constituting a simple model introducing only the alternating $k$-triangle parameter in addition to edges and Model $3$ representing the most complex model, including all four structural parameters. 
  	 
- 	 We simulate networks using the sampling method detailed in \Cref{sec:sim_ergm} for each of the these models for graphs on $n$ nodes with $n$ ranging from $100$ to $1000$ we sample. For each $n$ we draw $50$ networks each. Then, on average, networks drawn from Model $1$  have edge density (proportion of possible edges present) converging to roughly $6\%$ on average, Model $2$ has edge density converging to roughly $1\%$ and
- 	 Model $3$ has edge density converging to roughly $0.5\%$ on average. Thus, we study networks with a range of densities, while focusing on sparse networks, since our proposed algorithms are expected to work well for sparse networks and many real-world networks are sparse. Looking at the max degree of networks as well as the triangle count demonstrates that these three models lead to distinctive structure in the networks:
+ 	 We simulate networks using the sampling method detailed in \Cref{sec:sim_ergm} for graphs on $n$ nodes with $n$ ranging from $100$ to $1000$. For each $n$ and each model we draw $50$ networks. Looking at the structure of the simulated networks indicates that the $3$ models put most of their probability mass on distinctive networks. On average, networks drawn from Model $1$  have edge density (proportion of possible edges present) of $6\%$, networks from Model $2$ have average density of $1\%$, and networks from Model $3$ average $0.5\%$.  Further, the max degree and triangle counts of the networks vary highly between the three models:
  	
  	\begin{figure}[!h]
  		\centering
@@ -31,63 +30,117 @@
  		\caption{Degree of simulated networks (with shading indicating max and min over the $50$ samples and dashed line showing median degree) along with the mean triangle count for simulated networks.}
  	\end{figure}
  
- 	 Model $1$ has higher degree and much higher triangle count than Model $2$ or $3$, while Model $2$ has about three times as many triangles as Model $3$. Additionally, all the models put high probability on networks with much more complex structure than the basic $G(n,p)$ model with $p = 1\%$, for which  drawn networks tend to have only one tenth the number of triangles as Model $3$ despite having roughly the same edge density.  
+ 	 Networks drawn from Model $1$ have the highest degree and triangle count, while networks simulated from Model $2$ have approximately three times as many triangles as networks from Model $3$. Additionally, all three models capture more complex structures in networks than the basic $G(n,p)$ model with $p = 1\%$, for which simulated networks tend to have only one tenth the number of triangles as Model $3$ despite having higher edge density.  
  	
- 	 In addition to the simulated networks, we test our methods on a network known as the Faux Mesa Network, which is a publicly available network released by sociologists who studied high schools in the Southwestern United States by surveying the entire student body and formulated a social network based on this research with $205$ nodes corresponding to students and $203$ undirected edges representing friendships between students. \cite{ergm} The released network that we use was generated by the sociologists who collected the data by fitting an ERGM (using standard non-private inference) to the  dataset and then releasing a network sampled from the fitted distribution. This indicates that privacy was a concern for the underlying network data. However, since the synthetic network maintains the interesting structural properties of the underlying dataset, performing inference over this dataset still permits us to ask whether researchers would reach the same conclusions under our proposed differentially private inference methods as they would performing non-private inference. The network is quite sparse with an edge density of $\approx1\%$, suggesting that it is well-suited to applying restricted sensitivity. Further, the nodes in the network representing students are labeled with `Race' and 'Sex' enabling us to model the effect nodal attributes of the network on structure.
+ 	 In addition to the simulated networks, we test our methods on a dataset known as the ``Faux Mesa High School Network'', which is a publicly available social network released by sociologists who studied high schools in the Southwestern United States. These researchers surveyed the entire student body of a high school and formulated a social network with $205$ nodes corresponding to students (labeled with attributes like Race and Sex) and $203$ undirected edges representing reported mutual friendships between students \cite{ergm}. The publicly available network on which we test inference was generated by researchers by fitting an ERGM to the dataset and then releasing a network sampled from this distribution. This suggests that privacy was a concern for the underlying network data. Therefore, the synthetic network maintains the interesting structural properties of the underlying dataset. Performing inference over this dataset permits us to ask whether researchers would reach similar conclusions using our proposed differentially private inference methods as using standard non-private inference. 
  	 
- 	 \begin{figure}[!h]
- 	 	\centering
- 	 	\includegraphics[width=0.5\textwidth]{faux_mesa_viz.png}
- 	 	\caption{The Mesa High School Friendship Network with node colors representing Race and node border colors representing Sex.}
- 	 \end{figure}
+ 	 %\begin{figure}[!h]
+ 	 	%\centering
+ 	 	%\includegraphics[width=0.5\textwidth]{faux_mesa_viz.png}
+ 	 	%\caption{The Mesa High School Friendship Network with node colors representing Race and node border colors representing Sex.}
+ 	 %\end{figure}
+  
+\subsubsection*{Implementation}
 
-
-\subsection*{Implementation}
+Below, we give a number of important implementation details that apply to all conducted tests:
 \begin{itemize}
-	\item All of our code is written in the \texttt{R} programming language, with the procedure for sampling networks used for inference built on top of the packages \texttt{ergm} \cite{ergm} and \texttt{Bergm} \cite{Bergm}, which support non-private inference over exponential random graph models.
+	\item Code is written in the \texttt{R} programming language, with the procedure for sampling networks used for inference built on top of the packages \texttt{ergm} \cite{ergm} and \texttt{Bergm} \cite{Bergm}, which support non-private inference over ERGMS.
 	\item In order to explore a broad parameter space and compare a variety of approaches, the experiments ran in parallel on Harvard's Odyssey computing cluster. To speed up individual experiments (which was particularly important during initial debugging), the  inference step exploited thread level parallelism  on the 32-core machines.
 	\item Unless otherwise specified, we give overall privacy budget (in terms of $\eps$ and $\delta$), which is evenly split between sufficient statistics needed for inference, employing the composition property of differential privacy.
+	\item For all parameters, we specify a flat prior of $\N(0, 50)$ in inference. It may be possible to improve accuracy of inference by incorporating simple prior information, like the expected signs of parameters, about which researchers often have prior beliefs, which may be an interesting notion to investigate in future work.
+	\item To obtain point estimates of fitted parameters, we take the posterior mean of the posterior distribution over parameters fitted in our Bayesian inference method, which is standard practice for Bayesian inference on ERGMs \cite{CF11}.
 \end{itemize}
  
  \section{Edge-Adjacency Model}
  
-For edge-level privacy, we compare our proposed method against two alternative methods, the private bound on local sensitivity approach suggested by Lu and Miklau \cite{LM14} and the randomized response method of Karwa et al. \cite{KKS17} Since the private local sensitivity bound also adds noise to the sufficient statistics and then performs inference like our restricted sensitivity-based method, we first compare the added noise between these methods. We find that restricted sensitivity allows for much lower noise addition, especially at small values of $\eps$. Then, we evaluate how this difference in noise addition impacts the quality of inference. 
+For edge-level privacy, we compare our proposed method against two alternative methods, the private bound on local sensitivity approach suggested by Lu and Miklau \cite{LM14} and the randomized response method of Karwa et al. \cite{KKS17}. Since the private local sensitivity method also adds noise to sufficient statistics and then performs inference like our restricted sensitivity-based method, we first compare the noise addition step between these methods. We find that restricted sensitivity allows for much lower noise addition, measured in terms of root-mean-square error, especially at small values of $\eps$. 
 
-We compare differentially private inference between all three methods by looking at KL-divergence between the privately learned ERGM distribution implied by taking posterior means as parameter estimates and the ground truth ERGM distribution. For the three synthetic networks, we take ground-truth to be the true parameters of the ERGMs from which we drew synthetic data (specified in Table \ref{table:ergm_params}) while for the Mesa high school data we learn parameters non-privately and take these to be our best guess of true parameters.  KL-divergence measures how different two probability distributions are, so low KL-divergence suggests that we have performed useful inference. For two ERGM distributions defined by their respective parameter vectors $\theta_a$ and $\theta_b$, KL-divergence from $\theta_b$ to $\theta_a$ is given by:
+Then, we evaluate how difference in noise addition impacts quality of inference. We compare differentially private inference between all three methods by measuring KL-divergence between the privately learned ERGM and the ground truth ERGM distribution. For the three synthetic networks, we take ground-truth to be the true parameters of the ERGMs from which we drew synthetic data (specified in Table \ref{table:ergm_params}) while for the Mesa high school data we learn parameters non-privately and take these to be a best guess of true parameters.  KL-divergence measures how different two probability distributions are, so low KL-divergence between learned parameters and ground truth suggests useful inference. For two ERGM distributions defined by their respective parameter vectors $\theta_a$ and $\theta_b$, KL-divergence from $\theta_b$ to $\theta_a$ is given by:
 $$KL\left({\theta}_a || {\theta}_b\right) = \E_{{\theta}_a} \left[\log \frac{p(X | \theta_a)} {p(X | \theta_b) } \right] = \sum_{x \in \mathcal{G}_n} p(x | \theta_a) \log \frac{p(x | \theta_a)} {p(x | \theta_b)}$$
-which is straightforward to estimate using MCMC methods detailed in \cite{HG10}. Additionally, we look at the root-mean-square error, or RMSE, between privately estimated parameters and ground-truth parameters to assess how different the learned parameters are from ground-truth. By looking at both RMSE and KL-divergence we can characterize how well we accomplish both the goal of enabling researchers to reach valid conclusions about the dataset (by looking at parameter values) and at drawing synthetic networks from the fitted ERGM (which requires that the learned distribution be similar to the true distribution.)
+which is straightforward to estimate using MCMC methods detailed in \cite{HG10}. Additionally, we look at the Mean Absolute Error, or MAE, between privately estimated parameters and ground-truth parameters to assess how different the learned parameters are from ground-truth. The mean absolute error gives a sense of how biased private parameter estimates are on average. We normalize the MAE by the ground-truth parameters, so that errors for all parameters are on the same scale. By looking at both MAE and KL-divergence we characterize both how well we accomplish the goal of enabling researchers to reach valid conclusions about the dataset (by looking at parameter values) and at drawing synthetic networks from the fitted ERGM (which requires that the learned distribution be similar to the true distribution.)
  
- \subsection{Noise Addition Comparisons}
+ \subsection{Noise Addition Comparison}
  
- For noise addition comparison, we test the difference in noise added to sufficient statistics for the three synthetic networks and all values of $n$. For each of the $50$ networks of size $n$, we draw noise $50$ times based on each method resulting in $2500$ simulated noise draws for each network. We compute the four sufficient statistics (edges, alt-$k$-star, alt-$k$-triangle, and alt-$k$-two-path) with privacy levels per-statistic of $\eps = 0.1, 0.5, 1.$ and display results below for $\eps = 0.5$. For the private bounding of local sensitivity, which can only guarantee $(\eps, \delta)$-DP, we take $\delta = 10^{-6}$ per statistic, in order for the privacy guarantee to be comparable to that of pure $\eps$-differential privacy. 
+ \subsubsection{Setup}
+ For noise addition comparisons, we test the difference in noise added to sufficient statistics for the three synthetic network models and all values of $n$. For each of the $50$ networks of size $n$ drawn from a model, we draw noise $50$ times based on each method resulting in $2500$ simulated noise draws for each $n$. We compute the four sufficient statistics (edges, alt-$k$-star, alt-$k$-triangle, and alt-$k$-two-path) with privacy levels per-statistic of $\eps = 0.025, 0.125,$ and $0.25$ (so overall privacy budgets using the $4$ statistics are $0.1, 0.5,$ and $1$ respectively) and display results below for the largest budget of $\eps = 0.25$. For the private bounding of local sensitivity, which can only guarantee $(\eps, \delta)$-DP, we use a budget of $\delta = 10^{-6}$ so that the privacy guarantee is comparable to that of pure $\eps$-differential privacy. 
  
- Further, we test varying degree cutoffs $k$ of the restricted degree hypothesis. Lower (more aggressive) setting of $k$ allows for less Laplace noise to be added since the restricted sensitivity is smaller. However, if $k$ is lower than the true degree of the network, then the projection to the space of networks of degree $k$, requires removing edges from the network, introducing bias into the released sufficient statistics.  Since mean square error is variance plus squared bias, using RMSE captures both the error from projection bias and from Laplace noise addition. Specifically, we test three choices of $k$ representing an aggressive setting, a somewhat aggressive but more reasonable setting and a fairly conservative setting respectively:
+ Further, we test varying degree cutoffs $k$ of the restricted degree hypothesis. Lower (more aggressive) setting of $k$ allows for less Laplace noise to be added since the restricted sensitivity is smaller. However, if $k$ is lower than the true degree of the network, then the projection to the space of networks of degree $k$ requires removing edges from the network, introducing bias into the released sufficient statistics.  Since mean square error is variance plus squared bias, using RMSE captures both the error from projection bias and from Laplace noise addition. Specifically, we test three choices of $k$:
+ \vspace{-0.2in}
 \begin{enumerate}
-	\item Take $k$ equal to the minimum degree over the $50$ networks drawn from a given model, which may allow for low Laplace noise, but at the expense of potentially high bias induced by truncating many nodes.
+	\item Take $k$ equal to the minimum degree over the $50$ networks drawn from a given model, which may allow for low Laplace noise, but at the expense of potentially high bias induced by removing many edges.
 	\item Take $k$ to be the median degree over the $50$ networks, allowing relatively low scale of Laplace noise, while also introducing limited bias since the edge-level projection  requires removing edges from nodes that have degree higher than $k$ of which we expect there to be relatively few.
-	\item Take $k$ to be a conservative estimate of $1.5$ times the maximum degree of the $50$ networks drawn from a given model.
+	\item Take $k$ to be a conservative estimate of $1.5$ times the maximum degree of the $50$ networks drawn from a given model, which guarantees that we never under-estimate the degree of a network. 
 \end{enumerate}
 
-\begin{figure}[!h]
-	\centering
-	\includegraphics[width=0.49\textwidth]{noise/model1tribrief.png}
-	\includegraphics[width=0.49\textwidth]{noise/model1twopbrief.png}\\
-		\includegraphics[width=0.49\textwidth]{noise/model2tribrief.png}
-	\includegraphics[width=0.49\textwidth]{noise/model2twopbrief.png}\\
-		\includegraphics[width=0.49\textwidth]{noise/model3tribrief.png}
-	\includegraphics[width=0.49 \textwidth]{noise/model3twopbrief.png}\\
-	\includegraphics[width=0.35\textwidth]{noise/legend.png}
-	
-	\caption{Comparison of added noise with Laplace mechanism and $\eps = 0.5$ for private bounding of local sensitivity vs.restricted sensitivity with different values of $k$ for the restricted degree hypothesis.}
-\end{figure}
+ \subsubsection{Results}
+ \begin{figure}[!h]
+ 	\caption{Comparison of added noise with Laplace mechanism and $\eps = 0.25$-per statistic for private bounding of local sensitivity vs.restricted sensitivity with varying settings of $k$.}
+ 	\label{fig:edge_noise}
+ 	\centering
+ 	\input{figures/noise_tests_edge.tex}
 
-As the 
-
- \subsection{Inference Comparisons}
+ \end{figure}
  
- \subsection{Mesa High School Friend Network Data}
+As comparison of noise in Figure \ref{fig:edge_noise} demonstrates, for $\eps = 0.25$ per statistic, restricted sensitivity adds much less noise than private bounding of local sensitivity. The difference in noise addition is larger for the sparser networks drawn from Models $2$ and $3$, than for networks drawn from Model $1$, because the degree of these networks is lower, giving a restricted sensitivity bound closer to the local sensitivity of the statistics. Further, the scale of noise added in the private bound on local sensitivity is $O\left(\frac{LS}{\epsilon} + \frac{\log(1/\delta)}{\epsilon^2}\right)$, whereas restricted sensitivity adds noise scaled to $O\left(\frac{RS}{\epsilon}\right)$ so as $\epsilon$ gets smaller the $\frac{1}{\epsilon^2}$. Therefore, for smaller $\epsilon$ the $\frac{1}{\epsilon^2}$ term grows faster than the $\frac{1}{\eps}$ term leading to even higher noise addition for private bounding of local sensitivity. Consistent with this observation, for tests run with smaller $\epsilon$ of $0.025$ and $0.125$-per statistic, we observed that restricted sensitivity outperforms private local sensitivity in the amount of noise added by an even larger factor. This suggests that for smaller overall privacy budgets than $\epsilon=1$ or for cases where we introduce more sufficient statistics (for instance, when we want terms incorporating nodal attributes) so that we must split the privacy budget between more terms, restricted sensitivity will add even less noise than private local sensitivity.
+
+Comparing the RMSE of statistics to the true values, we observe that restricted sensitivity may permit inference in settings where the noise added by private local sensitivity would overwhelm the true statistic value. For instance, for Model $3$, the RMSE of the computed statistics is over three times the value of the true statistic using private local sensitivity, while restricted sensitivity adds noise under half the true statistic value. 
+
+Comparison of the different thresholds for the degree cutoff $k$, suggests that even a conservative cutoff outperforms private local sensitivity. However, choosing a more aggressive cutoff leads to much lower error, indicating that the lowered variance induced by Laplace noise addition has a much larger impact on error than the bias introduced by projecting networks of degree slightly larger than $k$ to the space of graphs with degree $k$. In fact, for the alternating $k$-triangle and the alternating $k$-two-path statistics, using the aggressive min $k$ cutoff, such that the degree of all the networks is beneath the cutoff, slightly outperforms restricted median. However, this aggressive setting of the cutoff introduced more bias into the edges and alt $k$-star terms. While the median cutoff leads to the removal of less than $0.05\%$ of edges in the network for all $n$, the min cutoff leads to the removal of around $0.3\%$ of edges. Additional testing with a highly aggressive cutoff of $0.75(\text{min degree})$ led to the removal of $7-8\%$ of edges highly increasing RMSE of released private statistics. The ability to use cutoffs below the actual degree of networks while adding limited bias to computed statistics most likely arises because ERGMs tend to well-capture power laws of degree distributions, such that there are relatively few nodes with degree close to the max degree. Therefore, choosing a cutoff below the max degree of the cutoff leads to the removal of only a few edges incident to these few nodes, skewing the structure of the network very little. Our comparison indicates that setting $k$ equal to the median of all max degrees for simulated networks constitutes a good choice of $k$, so we use this setting of $k$ in our inference tests. 
+
+Overall, our tests suggest that for reasonable choices of privacy budget $\epsilon$, restricted sensitivity introduces much lower error to sufficient statistics than privately bounding local sensitivity. Further, aggressively setting the degree cutoff $k$ to be beneath the max degree of actual networks can decrease the overall error in privatizing network statistics. 
+
+ \subsection{Inference Comparison on Synthetic Networks}
+ 
+ Next, we test how the differing approaches to perturbing the network data impact the quality of inference. We find that for small privacy budgets our proposed method outperforms randomized response and for either small privacy budgets or the use of many sufficient statistics our method outperforms private bounding of local sensitivity. 
+ 
+ \subsubsection{Setup}
+ 
+ We test the performance of private inference on networks drawn from of each of the three models with overall privacy budgets of $\epsilon=1$ and $\epsilon=3$. Specifically, for $N=25$ tests of inference, we randomly choose one of the $50$ networks on $300$ nodes drawn from a model and run inference on this model to learn the parameters for which the model was drawn. This implies that Model $1$ has the largest privacy budget per-statistics, since we split the fixed privacy budget over only the $2$ statistics for Model $1$ rather than $3$ statistics for Model $2$ and $4$ statistics for Model $3$. We test inference on networks of $300$ nodes, because private inference is expected to have higher utility on larger networks (as the amount of added noise is lower compared to the value of true statistics as shown in Figure \ref{fig:edge_noise}) but running a relatively large number of tests on networks with more than $300$ nodes was computationally infeasible within the scope of this work. For the small privacy budget of $\epsilon=1$, the inference method using randomized response fails to converge (which is unsurprising, because this corresponds to a probability of over $25\%$ of flipping each edge in the network, so the posterior distribution spreads probability mass over a very large range of possible networks.) Therefore, for $\epsilon=1$ we only report results for private local sensitivity and restricted sensitivity, while for $\epsilon = 3$ (corresponding to a flipping probability of $5.6\%$ in randomized response), we report results for all three methods.
+ 
+ \subsubsection{Results}
+  
+ \begin{figure}[hp]
+ 	\caption{Comparison of edge-level differentially private inference methods for synthetic networks with $300$ nodes.} 
+ 	\centering
+ 	\input{figures/inference_tests_edge_synth.tex}
+ 	\label{fig:edgeinfsynth}
+ \end{figure}
+ 
+Model $1$ uses only two sufficient statistics, allowing for high values of $\epsilon$ per statistic, since the privacy budget is split between few statistics. Thus, restricted sensitivity and private local sensitivity give similarly high accuracy for $\epsilon=1$ as shown in Figure \ref{fig:edgeinfsynth}. At the large privacy budget of $\epsilon=3$, private local sensitivity performs better than restricted sensitivity, although both have very low KL-divergence and mean absolute error comparable to non-private inference. In contrast, randomized response performs much worse than the two other methods, which is not surprising because for $\eps = 3$, randomized response has a probability of flipping each edge of $4.7\%$, which may heavily distort network structure considering that networks drawn from model $1$ only have edge density of $6\%$.
+
+For Models $2$ and $3$, restricted sensitivity outperforms both restricted sensitivity and private local sensitivity. For Model $3$, which uses all $4$ sufficient statistics, we observe that at $\epsilon=1$, private local sensitivity cannot perform useful inference, as the average bias of parameter estimates is over $2$ times the value of the parameters. However, using restricted sensitivity allows for useful parameter estimates, with relative MAEs well under $1$. Additionally, as the number of parameters increases (from Model $1$ to $3$) we can observe that randomized response becomes more competitive with the other approaches. This is due to the fact that randomized response does not require splitting a privacy budget between parameters, so its performance is not strongly affected by the number of parameters in the model. Meanwhile, private local sensitivity grows with a factor of $\frac{1}{\epsilon^2}$ for each statistic so as the privacy budget per-parameter gets smaller, the performance of private bounding of local sensitivity is significantly degraded. In contrast to private local sensitivity, then, our proposed method using restricted sensitivity allows for a larger number of parameters to be utilized in the model, while using small privacy budgets.
+
+  \subsection{Inference Comparison on Mesa High School Network}
+  
+ \subsubsection{Setup}
+ 
+ To test the performance of inference on network data representative of datasets analyzed by researchers, we apply the three private inference approaches to the Mesa High School Friend Network. We run $25$ tests of inference for each method and $\eps \in \{1,2,3,4\}$. Based on models used to study high school friendship networks in the published literature on the subject \cite{GKM09} as well as the models used for non-private inference on this particular network \cite{ergm} we fit the a model to the data, incorporating `Sex' labels on nodes. In particular, we look at both the four alternating structural statistics as well as measures of popularity by sex and overall homophily by sex. In this section, we consider labels to be public in line with previously proposed methods, so the sufficient statistics using nodal attributes have low global sensitivity as specified in Table \ref{tab:labeluffstatsrestr}.
+ 
+  \subsubsection{Results}
+  
+   \begin{figure}[h]
+  	\caption{Comparison of edge-level differentially private inference methods by KL divergence from non-private inference on Mesa High School Friend Network Data.}
+  	\centering
+  	\includegraphics[width=0.6\textwidth]{figures/inference/KLplot5.png}
+  	\label{fig:kledgepub}
+  \end{figure}
+  
+  As shown in Figure \ref{fig:kledgepub}, by KL-divergence restricted sensitivity strongly outperforms private local sensitivity, with median KL divergence ten times lower than for private local sensitivity at all $\epsilon$. The parameter estimates from private local sensitivity tend to be wildly off from the non-private estimates as the amount of added noise is larger than the sufficient statistics. This demonstrates one of the major shortcomings of private local sensitivity: it performs poorly for small values of $\delta$ and $\epsilon$, so splitting privacy budget between many sufficient statistics leads to large degradation in utility. Randomized response performs significantly worse than restricted sensitivity in terms of KL-divergence, but has lower variance of KL-divergence. We hypothesize that randomized response is more consistent over many iterations, because the flipping of edges with high probability effectively makes the network resemble a $G(n,p)$ network by removing triangles and two-paths, such that the networks consistently converge to a similar model, while restricted sensitivity perturbs the sufficient statistics so may sometimes lead to more or fewer triangles or $k$-stars in the network. 
+  
+    \begin{table}[h]
+  	\caption{Parameter values for typical test run (test with median KL divergence) on Mesa High Friend Network Data} 
+  	\label{tab:typparamsedge}
+  	\centering
+  	\input{figures/mesa_typical_params_edge.tex}
+  \end{table}
+  
+  In Figure \ref{tab:typparamsedge} we display ``typical'' test runs, by looking at the parameter estimates for the test runs with the median KL divergence among all tests, for  restricted sensitivity with $\epsilon=2$ and for randomized response with $\epsilon=3$. These results suggests that randomized response may overwhelm interesting structures in the network, while restricted sensitivity preserves the basic conclusions about network structure. Indeed, the parameter estimates for all of the structural parameters using randomized response are not significantly different from $0$. In contrast, the alternating sufficient statistics maintain the correct sign and triangulation is statistically significant for non-private inference using restricted sensitivity as it is under non-private inference. In general, standard errors are larger for private inference than for non-private inference, which demonstrates that our inference is accounting for the increased uncertainty in parameter estimates due to the perturbation of the privacy mechanism. Randomized response leads to much higher standard errors than restricted sensitivity, because the high perturbation probability on edges leads to high variance in the potential true network data. Overall, the typical parameter estimates, suggest that restricted sensitivity permits researchers to reach similar conclusions under private and non-private inference, while randomized response for even the large privacy budget of $\epsilon=3$ introduces both high bias and high uncertainty in parameter estimates.
+ 
  
  \section{Edge-Adjacency Model with Private Labels}
+
  
  \section{Node-Adjacency Model}
+ 
+ Text
  

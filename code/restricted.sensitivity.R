@@ -4,7 +4,7 @@
 
 # Project the network to H_k and add noise to suff stats
 make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
-                                 dp.delta=NULL, proj=TRUE, labels.priv=FALSE, attrs=NULL, 
+                                 dp.delta=NULL, proj=TRUE, proj.type=NULL, noise.type='lap', labels.priv=FALSE, attrs=NULL, 
                                  eps.labels=1.) {
   # project network to H_k
   # get original network
@@ -12,15 +12,20 @@ make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
   
   # project network to H_k
   if (proj) {
-    d.hat <- NULL
+    proj.aux.info <- NULL
     
     # edge projection
     if (privacy.type=="edge") y <- projection.edge(y.orig, dp.k)
     # node projection
-    if (privacy.type=="node") {
-      out <- projection.node(y.orig, dp.k)
+    if (privacy.type=="node" & proj.type =='LP') {
+      out <- projection.node.LP(y.orig, dp.k)
       y <- out$y
-      d.hat <- out$d.hat
+      proj.aux.info <- out$d.hat
+    }
+    if (privacy.type=="node" & proj.type =='trunc') {
+      out <- projection.node.trunc(y.orig, dp.k)
+      y <- out$y
+      proj.aux.info <- out$Cs
     }
   } else {
     y <- y.orig
@@ -36,8 +41,8 @@ make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
  
   model <- ergm.getmodel(formula, y)
   # draw laplace noise
-  noise <- draw.lap.noise.restricted(model$terms, dp.epsilon, dp.k, privacy.type,
-                                     dp.delta, d.hat, labels.priv=labels.priv)
+  noise <- draw.lap.noise.restricted(model$terms, dp.epsilon, dp.k, privacy.type, 
+                                     dp.delta, proj.aux.info=proj.aux.info, proj.type=proj.type, noise.type=noise.type, labels.priv=labels.priv)
   noise$dp.epsilon <- dp.epsilon
   if (privacy.type == "node") noise$dp.delta <- dp.delta
   noise$dp.k <- dp.k
@@ -52,7 +57,7 @@ make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
 # Draw Laplace noise under restricted sensitivty
 draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
                                       dp.k, privacy.type, labels.priv=FALSE,
-                                      dp.deltaTot=NULL, d.hat=NULL) {
+                                      dp.deltaTot=NULL, proj.type=NULL, noise.type='lap', proj.aux.info=NULL) {
   
   # output vector of level of laplace noise to add
   noise.level <- rep(NA,  length(unlist(lapply(terms, function(x) {x$coef.names}))))
@@ -69,29 +74,35 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
 
   # split delta evenly between terms if it is given as scalar
   if (privacy.type == "node") {
-      # split delta evenly between terms if it is given as scalar
-      if (length(dp.deltaTot == 1)) {
-        dp.delta <- rep(dp.deltaTot/length(terms), length(terms))
-      } else {
-        if (length(dp.deltaTot) != length(terms)) {
-          print("Delta must be either scalar or specified for all terms.")
-          return()
+      if (noise.type == 'lap') {
+        # split delta evenly between terms if it is given as scalar
+        if (length(dp.deltaTot == 1)) {
+          dp.delta <- rep(dp.deltaTot/length(terms), length(terms))
+        } else {
+          if (length(dp.deltaTot) != length(terms)) {
+            print("Delta must be either scalar or specified for all terms.")
+            return()
+          }
+          dp.delta <- dp.deltaTot
         }
-        dp.delta <- dp.deltaTot
-      }
-
-      # restricted sensitivity is computed over H_2k
-      dp.k <- 2*dp.k
-
-      # set up multiplicative factor for smooth sensitivity
-      beta <- dp.epsilon[t]/(2*log(1/dp.delta))
-      if ((beta/4.) <= 2./5.) {
-        x <- beta/4
-        g <- (2./x) * exp((5/2)*x - 1)
       } else {
-        g <- 5
+        dp.delta <- rep(NULL, length(terms))
       }
-      C <- g*exp(beta*d.hat/4.)
+      
+
+      # SMOOTH SENSITIVITY SETUP
+      # (assuming even split of noise)
+      beta <- get.beta(noise.type, dp.epsilon[1], dp.delta[1])
+      if (proj.type == "LP") {
+        # restricted sensitivity is computed over H_2k
+        dp.k <- 2*dp.k
+        C <- smooth.sens.LP(proj.aux.info, beta)
+      }
+      if (proj.type == "trunc") {
+        C <- smooth.sens.trunc(proj.aux.info, beta)
+      }
+  } else {
+    C <- NULL
   }
 
   # calculate amount of noise to add for each term
@@ -160,7 +171,7 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
   }
   # draw Laplace noise to use
   noise.draw <- rlaplace(n = length(noise.level), scale = noise.level)
-  return(list("level" = noise.level, "draw" = noise.draw))
+  return(list("level" = noise.level, "draw" = noise.draw, "C" = C))
 }
 
 ########################################################################
@@ -194,12 +205,60 @@ projection.edge <- function(nw, dp.k) {
   return(nw.out)
 }
 
-#projection.node.trunc <- function(nw, dp.k) {}
+projection.node.trunc <- function(nw, dp.k) {
+   nw.mat <- as.matrix(nw)
+
+   n <- dim(nw.mat)[1]
+   to.del <- c()
+   for (i in 1:n) {
+     if (sum(nw.mat[i,]) > dp.k) to.del <- append(to.del, i)
+   }
+   # truncate vertices
+   nw.mat[to.del,] <- 0
+   nw.mat[,to.del] <- 0
+
+    y <- network(nw.mat, directed=FALSE)
+    y <- copy.vertex.attrs(nw, y)
+
+    # find Ct for smooth sens
+    nw.matorig <- as.matrix(nw)
+    deg.dist <- data.table(table(apply(nw.matorig, 1, sum)))
+    colnames(deg.dist) <- c("deg", "num")
+    deg.dist$deg <- as.numeric(deg.dist$deg)
+    C_t <- function(t) {1 + t + deg.dist[(deg >= (dp.k - t)) & (deg <= (dp.k + t + 1)), sum(num)]}
+    Cs <- sapply(seq(0,round(2*dp.k)), function(t) C_t(t))
+    return(list("y" = y, "Cs"=Cs))
+}
+
+get.beta <- function(noise.type, dp.epsilon, dp.delta=NULL) {
+  if (noise.type == 'lap') {
+    return(dp.epsilon/(2*log(1/dp.delta)))
+  } 
+  if (noise.type == 'cauchy') {
+    return(dp.epsilon/sqrt(2))
+  }
+}
+
+smooth.sens.trunc <- function(Cs, dp.beta) {
+   vals <- unlist(sapply(seq(0,length(Cs)), function(t) exp(-dp.beta*t)*Cs[t]))
+   beta.smooth <- max(vals)
+   return(beta.smooth)
+}
+
+smooth.sens.LP <- function(d.hat, dp.beta) {
+   if ((dp.beta/4.) <= 2./5.) {
+        x <- dp.beta/4
+        g <- (2./x) * exp((5/2)*x - 1)
+      } else {
+        g <- 5
+      }
+      C <- g*exp(dp.beta*d.hat/4.)
+}
 
 # projection into H_k for node-level privacy
 projection.node.LP <- function(nw, dp.k) {
 
-  tic("LP setup")
+  #tic("LP setup")
   
   nw.mat <- as.matrix(nw)
   n <- dim(nw.mat)[1]
@@ -246,12 +305,12 @@ projection.node.LP <- function(nw, dp.k) {
   const.dir <- c(const.dir.proj1, const.dir.proj2, const.dir.rs)
   const.rhs <- c(const.rhs.proj1, const.rhs.proj2, const.rhs.rs)
   
-  toc()
+  #toc()
   
-  tic("LP solution")
+  #tic("LP solution")
    # all vars are non-negative + real by default 
   LP <- Rglpk_solve_LP(objective.in, const.mat, const.dir, const.rhs, max=FALSE)
-  toc()
+  #toc()
   
   d.hat <- 4*LP$optimum
   to.remove <- LP$solution[1:n] >= 0.25
@@ -260,7 +319,7 @@ projection.node.LP <- function(nw, dp.k) {
   y <- network(nw.mat, directed=FALSE)
   y <- copy.vertex.attrs(nw, y)
   
-  return(list("y" = y, "d.hat" = d.hat, "lp" = LP))
+  return(list("y" = y, "d.hat" = d.hat))
 }
 
 # privatize labels in a network

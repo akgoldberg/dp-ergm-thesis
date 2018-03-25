@@ -132,7 +132,7 @@ truncate.KL <- function(df.graph) {
       if (method != 'nonprivate') {
         KL.vec <- sort(df.graph[df.graph$eps == eps & df.graph$method == method, 'KL'])
         df.graph <- df.graph[!(df.graph$eps == eps & df.graph$method == method
-                               & ((df.graph$KL %in% head(KL.vec, 1)) | df.graph$KL %in% tail(KL.vec, 2))),]
+                               & ((df.graph$KL %in% head(KL.vec, 0)) | df.graph$KL %in% tail(KL.vec, 5))),]
       }
     }
   }
@@ -140,10 +140,10 @@ truncate.KL <- function(df.graph) {
 }
 
 # get rows of tests with median KLs for their method and eps level
-get.median.KLs <- function(df.tests) {
+get.median.KLs <- function(df.tests, pr=0.5) {
   df.tests$KL <- round(abs(df.tests$KL),3)
   df.tests <- data.table(df.tests)
-  df.meds <- df.tests[stat.name == 'edges', list(quantile(KL, prob=c(0.25))), by=list(method, eps)]
+  df.meds <- df.tests[stat.name == 'edges', list(quantile(KL, prob=c(pr))), by=list(method, eps)]
   for (i in 1:dim(df.meds)[1]) {
       row <- df.meds[i,]
       df.tests <- df.tests[eps != row$eps | method != row$method | KL == row$V1,]
@@ -152,8 +152,14 @@ get.median.KLs <- function(df.tests) {
 }
 
 visualize.inference.tests <- function(tests.id) {
+  options(scipen=1e5)
+  if (tests.id >= 7) {
+    legend.position = 'bottom'
+  }  else {
+    legend.position = 'none'
+  }
   df.tests <- load.df.inference.tests(tests.id)
-  df.tests$KL <- abs(df.tests$KL)
+  df.tests$KL <- abs(df.tests$KL/10.)
   df.tests <- truncate.KL(df.tests)
   df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
   
@@ -162,32 +168,77 @@ visualize.inference.tests <- function(tests.id) {
   print(sprintf("KL of non-private is %g", mean(df.tests[df.tests$method == 'nonprivate', 'KL'])))
   plt.KL <- ggplot(data = df.graph, mapping=aes(x=eps, y=KL, color=method)) +
     geom_boxplot(outlier.alpha = 0.5, width = 0.5) +
-    scale_y_log10("KL Divergence from Ground Truth (Log Scale)", limits=c(1,NA), breaks=c(1,10,100,1000,10000)) +
+    scale_y_log10("KL Divergence (Log Scale)", breaks=c(0.1,1,10,100,1000,10000)) +
     scale_x_discrete(expression(epsilon)) +
-    theme(axis.text=element_text(size=8), axis.title = element_text(size=10))
-  
+    scale_color_discrete("Method:") +
+    theme(axis.text=element_text(size=14), axis.title.y = element_text(size=16), axis.title.x = element_text(size=32), legend.position=legend.position)
+
   ggsave(filename = sprintf('plots/inference/KLplot%d.png', sample.map.id(tests.id)), plot = plt.KL)
   # MAE plots
-  
-  #### CAN USE post.mean or post.mean.med here...)
-  df.tests$squared.error <- (df.tests$post.mean.med - df.tests$true.param.value)**2
+  make_stat_plot(df.tests, 'RMSE', tests.id, legend.pos = legend.position)
+  make_stat_plot(df.tests, 'MAE', tests.id, legend.pos = legend.position)
+  make_stat_plot(df.tests, 'MSE', tests.id, legend.pos = legend.position)
+}
+
+
+make_stat_plot <- function(df.tests, stat.use, tests.id, use.rel=TRUE, legend.pos) {
   df.tests <- data.table(df.tests)
-  rel.mae.df <- unique(df.tests[stat.value != 0, (mean(sqrt(squared.error)/(abs(true.param.value)))), by=list(method, eps, stat.name)])
-  nonpriv <- rel.mae.df[method=='nonprivate', list(stat.name, V1)]
-  View(nonpriv)
-  rel.mae.df <- rel.mae.df[method != 'nonprivate',]
-  View(rel.mae.df)
-  rel.mae.df$stat.name <- sapply(as.character(rel.mae.df$stat.name), get.statname, USE.NAMES = FALSE)
-  if (tests.id == 6) {
-    rel.mae.df = rel.mae.df[method %in% c('restricted', 'rr')]
+  
+   if(tests.id == 7) {
+    #df.tests <- df.tests[method != 'private local', ]
+    use.rel <- FALSE
+  } 
+
+  if (stat.use == "MSE") {
+      df.tests$squared.error <- (df.tests$post.mean.med - df.tests$true.param.value)**2
+      use.rel <- FALSE
+      rel.df <- unique(df.tests[stat.value != 0, mean(squared.error), by=list(method, eps, stat.name)])  
   }
-  # Labeler for facet grid
-  plt.MAE <- ggplot(data = rel.mae.df, mapping=aes(x=stat.name, y=V1, fill=factor(method))) +
+  if (stat.use == "RMSE") {
+      df.tests$squared.error <- (df.tests$post.mean.med - df.tests$true.param.value)**2
+      if (use.rel) {
+        rel.df <- unique(df.tests[stat.value != 0, (sqrt(mean(squared.error/true.param.value**2))), by=list(method, eps, stat.name)])
+      } else {
+        rel.df <- unique(df.tests[stat.value != 0, (sqrt(mean(squared.error))), by=list(method, eps, stat.name)])
+      }
+  }
+  if (stat.use == "MAE") {
+      df.tests$squared.error <- (df.tests$post.mean.med - df.tests$true.param.value)**2
+      if (use.rel) {
+        rel.df <- unique(df.tests[stat.value != 0, (mean(sqrt(squared.error/true.param.value**2))), by=list(method, eps, stat.name)])
+      } else {
+        rel.df <- unique(df.tests[stat.value != 0, (mean(sqrt(squared.error))), by=list(method, eps, stat.name)])
+      }
+  }
+  
+  rel.df <- rel.df[method != 'nonprivate',]
+  rel.df$stat.name <- sapply(as.character(rel.df$stat.name), get.statname, USE.NAMES = FALSE)
+  
+  if(use.rel) {
+    label.str <- sprintf('Relative %s', stat.use)
+  } else {
+    label.str <- sprintf('%s', stat.use)
+  }
+  
+  plt <- ggplot(data = rel.df, mapping=aes(x=stat.name, y=V1, fill=factor(method))) +
     geom_bar(stat='identity', position='dodge') +
-    facet_wrap(~ eps, ncol = 2, labeller = label_bquote(cols = epsilon == .(eps))) +
-    scale_fill_discrete('Method') +
+    facet_wrap(~ eps, ncol = 2, labeller = label_bquote(cols = epsilon == .(eps)), scales="free") +
+    scale_fill_discrete("Method:") +
     scale_x_discrete('Statistic') +
-    theme(axis.text=element_text(size=8, angle=45, hjust=1), axis.title = element_text(size=10)) +
-    scale_y_continuous('Relative MAE', breaks=pretty_breaks(n=10)) 
-  ggsave(filename = sprintf('plots/inference/MAEplot%d.png', sample.map.id(tests.id)), plot = plt.MAE)
+    theme(axis.text=element_text(size=14, angle=45, hjust=1, vjust=1), axis.title = element_text(size=16), legend.position=legend.pos) +
+    scale_y_continuous(label.str, breaks=pretty_breaks(n=10)) 
+  ggsave(filename = sprintf('plots/inference/%splot%d.png', stat.use, sample.map.id(tests.id)), plot = plt)
+}
+
+make.all.plots <- function() {
+  for (i in c(1,3,5,7)) {
+    visualize.inference.tests(i)
+  }
+}
+
+view.ARs <- function(tests.id) {
+  df.tests <- data.table(load.df.inference.tests(tests.id))
+  df.tests$AR <- 100*df.tests$AR
+  df.AR <- df.tests[stat.name == 'edges', list("min"=min(AR), "25p"=quantile(AR, .25),"median"=median(AR), "75p"=quantile(AR, .75), "max"=max(AR), "mean"=mean(AR)), by=list(method, eps)]
+  View(df.AR)
 }
