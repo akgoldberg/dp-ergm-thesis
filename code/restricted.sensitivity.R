@@ -226,7 +226,7 @@ projection.node.trunc <- function(nw, dp.k) {
     colnames(deg.dist) <- c("deg", "num")
     deg.dist$deg <- as.numeric(deg.dist$deg)
     C_t <- function(t) {1 + t + deg.dist[(deg >= (dp.k - t)) & (deg <= (dp.k + t + 1)), sum(num)]}
-    Cs <- sapply(seq(0,round(2*dp.k)), function(t) C_t(t))
+    Cs <- sapply(seq(0,1+round(2*dp.k)), function(t) C_t(t))
     return(list("y" = y, "Cs"=Cs))
 }
 
