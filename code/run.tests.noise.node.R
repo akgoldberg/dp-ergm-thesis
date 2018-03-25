@@ -10,7 +10,7 @@ source('libraries.R')
 
 samples <- load.samples(i)
 df.samples <- run.noise.node.tests(samples, stop=1000) 
-write.table(df.samples, file = sprintf("df.samples%d_node_trunc.txt",i), sep = ",", col.names = colnames(df.samples))
+write.table(df.samples, file = sprintf("df.samples%d_node.txt",i), sep = ",", col.names = colnames(df.samples))
 
 
 
