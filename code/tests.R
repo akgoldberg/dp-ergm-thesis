@@ -442,7 +442,7 @@ run.sample.noise.test.node <- function(sample, dp.epsilons, dp.delta) {
     
     N <- length(sample)
     
-    for (projection.type in c('LP', 'trunc')) {
+    for (projection.type in c('trunc')) {
       tic(sprintf("%s Projection", projection.type))
       # iterate over values of cutoff k
       for (k in 1:length(dp.ks)) {
