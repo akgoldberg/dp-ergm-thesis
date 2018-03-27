@@ -26,7 +26,8 @@ if (i==3) {
                                             non.private=FALSE, num.tests=25)
 } 
 if (i==5) {
-    sigma.epsilon = diag(c(0.0001, 0.00005, 0.00005, 0.000005))
+    sigma.epsilon = diag(c(0.0001, 0.00005, 0.00005, 0.00001))
+    sigma.prior = diag(c(10, 5, 5, 0.25))
     inference.tests <- run.inference.tests(i, 300, ~edges+altkstar(0.5, fixed=TRUE)+gwesp(0.5, fixed=TRUE)+gwdsp(0.5,fixed=TRUE),
                                             dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                             non.private=FALSE, num.tests=25)

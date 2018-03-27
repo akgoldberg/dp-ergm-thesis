@@ -419,6 +419,23 @@ load.inference.tests <- function(i, method, dp.epsilon) {
   } 
 }
 
+load.inference.tests.new <- function(i, method, dp.epsilon) {
+  if (method=="nonpriv") {
+    fname = sprintf("obj/inference.tests.new/inference.tests%dnonpriv", i)
+    load(fname)
+    return(inference.tests)
+  } else {
+    if (method == 'restr') {
+      folder <- 'inference.tests.new'
+    } else {
+      folder <- 'inference.tests'
+    }
+    fname = sprintf("obj/%s/inference.tests%d%s-eps%g", folder, i, method, dp.epsilon)
+    load(fname)
+    return(inference.tests)
+  } 
+}
+
 
 ###############################################################################
 ##                      Node Level Noise Tests                               ##
@@ -512,7 +529,7 @@ load.noise.test.node <- function(tests.id, trunc.only=FALSE) {
   return(df.samples)
 }
 
-plot.noise.tests <- function(tests.id, legend.pos='none') {
+plot.noise.node.tests <- function(tests.id, legend.pos='none') {
   df.samples <- load.noise.test.node(tests.id, trunc.only=FALSE)
   draw.noise <- function(noise.scale, noise.type) {
     if (noise.type == 'lap') {
@@ -529,14 +546,16 @@ plot.noise.tests <- function(tests.id, legend.pos='none') {
                                    "p75.err"=quantile(bias+draw.noise(noise.scale, noise.type),p=0.75)),
                              by=list(n, stat.name, dp.klevel, dp.epsilon, proj.type, noise.type)]
   df.quantiles$stat.name <- sapply(df.quantiles$stat.name, get.statname)
-  View(df.quantiles[dp.klevel == 'max' & dp.epsilon==0.5 & noise.type=='cauchy' & proj.type=='trunc',])
-  ggplot(data=df.quantiles[dp.epsilon==0.5 & noise.type=='cauchy' & n>=400,], mapping = aes(x=n, y=median.err/mean.stat.value, color=dp.klevel)) +
-    facet_wrap(stat.name~proj.type, nrow=4, ncol=2, scales = "free", labeller = label_wrap_gen(multi_line=FALSE)) +
+  View(df.quantiles[dp.klevel %in% c('max','conservative') & dp.epsilon==0.5 & noise.type=='cauchy' & proj.type=='trunc',])
+  ggplot(data=df.quantiles[dp.epsilon==0.75 & noise.type=='cauchy' & n>=400,], mapping = aes(x=n, y=median.err/mean.stat.value, color=dp.klevel)) +
+    facet_wrap(stat.name~proj.type, nrow=4, ncol=2, scales = "free_y", labeller = label_wrap_gen(multi_line=FALSE)) +
     geom_line() +
     scale_color_discrete("Degree Cutoff:") +
-    scale_x_continuous('n') +
+    scale_x_continuous('n', breaks=seq(400,1000,100)) +
+    theme_grey() +
     theme(axis.text=element_text(size=10), strip.text = element_text(size=8), title = element_text(size=12), legend.position=legend.pos) +
     scale_y_continuous('Relative Median Absolute Error') 
+  ggsave(filename = sprintf("plots/noise.node/noise_node%s.png", sample.map.id(tests.id)), width=10, height=20)
 }
 
 ### ALREADY FIXED TRUNC TESTS ###
@@ -555,4 +574,34 @@ fix.noise.node.tests <- function(tests.id, trunc.only) {
   df.samples[noise.type == 'cauchy', 'smooth.sens'] <- df.samples[noise.type == 'cauchy', sqrt(2)*smooth.sens]
   df.samples[noise.type == 'cauchy', 'noise.scale'] <- df.samples[noise.type == 'cauchy', sqrt(2)*noise.scale]
   write.table(df.samples, file = fname, sep = ",", col.names = colnames(df.samples))
+}
+
+
+######################################
+#         New Noise Viz             ##
+######################################
+visualize.noise.tests.new <- function(tests.id,
+                                  dp.klevels=c('min','median','conservative'),
+                                  stat.names=c('gwesp.fixed.0.5', 'gwdsp.fixed.0.5'),
+                                  legend.pos='none') {
+  
+  df.samples <- data.table(read.table(file=sprintf("obj/df/df.samples%d.txt",tests.id), sep = ",", header=TRUE))
+  
+  # refer to smooth as 'private local'
+  df.samples$type = revalue(df.samples$type, c('smooth' = 'private local'))
+  df.samples$method = gsub(" NA", "", paste(df.samples$type, df.samples$dp.klevel))
+  df.samples <- df.samples[eps == 1. & n >= 300 & (dp.klevel %in% dp.klevels | method == 'private local') & stat.name %in% stat.names,]
+  df.samples$eps <- df.samples$eps/4.
+  df.samples$stat.name <- sapply(df.samples$stat.name, get.statname)
+
+  ggplot(data = df.samples, mapping=aes(x=n, y=rmse/stat.value, color=method)) +
+    facet_wrap(~stat.name, scales = 'free_y') +
+    geom_line(size=1) +
+    geom_point(size=2) +
+    scale_color_manual("Method:", values=c('#4D82FF', '#fac105', '#F65C55', '#730107')) +
+    scale_y_continuous("Relative RMSE", breaks=pretty_breaks(n=8)) +
+    scale_x_continuous("n", breaks=seq(200,1000, 100)) +
+    theme_grey() +
+    theme(legend.position = legend.pos) 
+  ggsave(filename = sprintf("plots/noise.to.use/noise%s.png", sample.map.id(tests.id)), width=10, height=5)
 }

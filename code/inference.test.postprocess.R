@@ -1,22 +1,23 @@
 # make a data frame with multiple methods and epsilons from inference tests
-make.inference.df <- function(model.id, methods=c("smooth", "restr", "rr"), dp.epsilons=c(1, 2, 3, 4)) {
+make.inference.df <- function(model.id, methods=c("nonpriv", "smooth", "restr", "rr"), dp.epsilons=c(1, 2, 3, 4)) {
   df.out <- data.frame()
   
   # get nonprivate df
-  nonpriv.tests <- load.inference.tests(model.id, "nonprivate")
-    if (model.id >= 6) {
-    true.theta <- apply(nonpriv.tests$Theta,c(2),mean)
-  } else {
-    true.theta <- nonpriv.tests$true
-  }
-  nonpriv.df <- make.inference.testsdf.row(nonpriv.tests, true.theta, model.id, 0)
-  df.out <- rbindlist(list(df.out, nonpriv.df), use.names=TRUE, fill=TRUE)
-  
+  #nonpriv.tests <- load.inference.tests(model.id, "nonprivate")
+  #  if (model.id >= 6) {
+  #  true.theta <- apply(nonpriv.tests$Theta,c(2),mean)
+  #} else {
+  #  true.theta <- nonpriv.tests$true
+  #}
+  #nonpriv.df <- make.inference.testsdf.row(nonpriv.tests, true.theta, model.id, 0)
+  #df.out <- rbindlist(list(df.out, nonpriv.df), use.names=TRUE, fill=TRUE)
+  true.theta <- NULL
   test.id.start <- 0
   for (method in methods) {
     for (dp.epsilon in dp.epsilons) {
+      print(sprintf("Method: %s, Epsilon: %d", method, dp.epsilon))
       fname <- sprintf("obj/inference.tests/inference.tests%d%s-eps%g", model.id, method, dp.epsilon)
-      if (file.exists(fname)) {
+      if (file.exists(fname) | (method == 'nonpriv' && dp.epsilon==1)) {
         df.out <- rbindlist(list(df.out, get.summary.inference.tests(model.id, method, dp.epsilon, test.id.start, true.theta)),
                             use.names=TRUE, fill=TRUE)
         test.id.start <- max(df.out$test.num)
@@ -31,7 +32,7 @@ make.inference.df <- function(model.id, methods=c("smooth", "restr", "rr"), dp.e
 # Make raw test data into dataframe
 get.summary.inference.tests <- function(model.id, method, dp.epsilon, test.id.start, true.theta) {
   # load the tests for this model, method and epsilon value
-  tests <- load.inference.tests(model.id, method, dp.epsilon)
+  tests <- load.inference.tests.new(model.id, method, dp.epsilon)
   df.out <- data.frame("model.id"=numeric(), "method"=character(), "stat.name"=character(),
                    "eps"=numeric(), "delta"=numeric(),
                     "stat.value"=numeric(),  "AR"=numeric(),
@@ -50,7 +51,7 @@ get.summary.inference.tests <- function(model.id, method, dp.epsilon, test.id.st
 
 # make one row of test df
 make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
-     row <- list()
+    row <- list()
    
     row$model.id <- model.id
     row$test.num <- test.num
@@ -63,7 +64,7 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
     names(row$post.mean) <- statnames
     names(row$post.se) <- statnames
     names(row$post.mean.med) <- statnames
-     names(row$post.sd) <- statnames
+    names(row$post.sd) <- statnames
     row$stat.value <- x$stats
     true.theta <- true.theta[true.theta != 0]
     row$true.param.value <- true.theta
@@ -81,6 +82,9 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
     # private test inference run
     else {
       row$method <- x$noise$method
+      if (is.null(row$method)) {
+        row$method <- 'nonpriv'
+      }
       row$eps <- sum(x$noise$dp.epsilon)
       row$delta <- sum(x$noise$dp.delta)
       row$noise.draw <- x$noise$draw
@@ -121,8 +125,12 @@ extract.nonprivate <- function(i) {
 }
 
 # Load dfs for inference tests
-load.df.inference.tests <- function(i) {
-  df.tests <- read.table(file = sprintf("obj/df/df.inference.tests%d.txt",i), sep = ",", header=TRUE)
+load.df.inference.tests <- function(i, new=TRUE) {
+  if (new) {
+    read.table(file = sprintf("obj/df/df.inference.tests_new%d.txt",i), sep = ",", header=TRUE)
+  } else {
+    read.table(file = sprintf("obj/df/df.inference.tests%d.txt",i), sep = ",", header=TRUE)
+  }
 }
 
 # cut out cases with worst KL
@@ -259,17 +267,18 @@ plot.tests.params <- function(tests.id, legend.position="right") {
   df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
   df.tests <- trunc.points(trunc.points(trunc.points(df.tests)))
   df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method, eps)]
-  ggplot(df.tests, aes(x=method,y=param.est, fill=method)) +
+  #df.tests.lims <- df.tests[,list("upper"=(max(param.est),median(param.est)+1.5*IQR(param.est)), "min"=median(param.est)-1.5*IQR(param.est)), by=list(stat.name, method, eps)]
+  #limits=c(df.tests.lims$min, df.tests.lims$max)
+  ggplot(df.tests[method!='nonpriv',], aes(x=method,y=param.est, fill=method)) +
     #facet_grid(stat.name~eps,  scales='free', labeller = label_bquote(cols= epsilon == .(eps))) +
     facet_wrap(stat.name~eps, ncol=2, scales='free', labeller = label_bquote(rows = .(stat.name)*",  "*epsilon == .(eps))) +
-    geom_boxplot(outlier.alpha=0., alpha=0.8) +
-    geom_hline(data=df.tests.true, aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
-    scale_y_continuous("Posterior Estimate", breaks=pretty_breaks(n=8)) +
+    geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
+    geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
+    scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
     scale_fill_discrete("Method:") +
     scale_x_discrete("",breaks=NULL) +
     theme_grey() +
     theme(strip.text=element_text(size=10, margin=margin(0.01, 0, 0.01, 0, "cm")),
-          #strip.background =element_rect(size=1),
           axis.text.y=element_text(size=10),
           axis.text.x =element_text(size=0),
           axis.title.y = element_text(size=10),
