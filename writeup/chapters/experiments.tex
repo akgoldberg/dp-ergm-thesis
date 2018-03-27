@@ -73,8 +73,8 @@ which is straightforward to estimate using MCMC methods detailed in \cite{HG10}.
 \end{enumerate}
 
  \subsubsection{Results}
- \begin{figure}[!h]
- 	\caption{Comparison of Relative RMSE of differentially private sufficient statistics computed with privacy level of $\eps = 0.25$-per statistic. Laplace noise is scaled to private bound of local sensitivity or restricted sensitivity with varying settings of $k$.}
+ \begin{figure}[hp]
+ 	\caption{Comparison of Relative RMSE of differentially private sufficient statistics computed with privacy level of $\eps = 0.25$-per statistic.} %Laplace noise is scaled to private bound of local sensitivity or restricted sensitivity with $3$ different settings of degree cutoff $k$ for the restricted sensitivity.}
  	\label{fig:edge_noise}
  	\centering
  	\input{figures/noise_tests_edge.tex}
@@ -99,13 +99,37 @@ Overall, our tests suggest that for reasonable choices of privacy budget $\epsil
  
  \subsubsection{Results}
   
- \begin{figure}[hp]
- 	\caption{Comparison of edge-level differentially private inference methods for synthetic networks with $300$ nodes. Plots on the left show the median, 75th and 25th quartiles, and max and min values of KL-divergence.} 
- 	\centering
- 	\input{figures/inference_tests_edge_synth.tex}
- 	\label{fig:edgeinfsynth}
- \end{figure}
+ %\begin{figure}[hp]
+ 	%\caption{Comparison of edge-level differentially private inference methods for synthetic networks with $300$ nodes. Plots on the left show the median, 75th and 25th quartiles, and max and min values of KL-divergence.} 
+ 	%\centering
+ 	%\input{figures/inference_tests_edge_synth.tex}
+ 	%\label{fig:edgeinfsynth}
+ %\end{figure}
  
+  \begin{figure}[h]
+ \caption{Differentially private parameter estimates for $300$ node synthetic networks drawn from \emph{Model $\mathit{1}$}. The dotted black line denotes ground-truth parameter values.}
+ \centering 
+ \includegraphics[width=0.5\linewidth]{figures/inference/legend.png}
+ \includegraphics[width=0.6\linewidth]{figures/inference/paramplot1.png}
+ \label{fig:edgeinfsynth1}
+\end{figure}
+
+  \begin{figure}[h]
+	\caption{Parameter estimates for $300$ node synthetic networks drawn from \emph{Model $\mathit{2}$}.}
+	\centering 
+	\includegraphics[width=0.5\linewidth]{figures/inference/legend.png}
+	\includegraphics[width=0.7\linewidth]{figures/inference/paramplot2.png}
+	\label{fig:edgeinfsynth2}
+\end{figure}
+ 
+  \begin{figure}[h]
+	\caption{Parameter estimates for $300$ node synthetic networks drawn from \emph{Model $\mathit{3}$}.}
+	\centering 
+	\includegraphics[width=0.5\linewidth]{figures/inference/legend.png}
+	\includegraphics[width=0.75\linewidth]{figures/inference/paramplot3.png}
+	\label{fig:edgeinfsynth3}
+\end{figure}
+
 Model $1$ uses only two sufficient statistics, allowing for high values of $\epsilon$ per statistic, since the privacy budget is split between few statistics. Thus, restricted sensitivity and private local sensitivity give similarly high accuracy for $\epsilon=1$ as shown in Figure \ref{fig:edgeinfsynth}. At the large privacy budget of $\epsilon=3$, private local sensitivity performs better than restricted sensitivity, although both have very low KL-divergence and mean absolute error comparable to non-private inference. In contrast, randomized response performs much worse than the two other methods, which is not surprising because for $\eps = 3$, randomized response has a probability of flipping each edge of $4.7\%$, which may heavily distort network structure considering that networks drawn from model $1$ only have edge density of $6\%$.
 
 For Models $2$ and $3$, restricted sensitivity outperforms both restricted sensitivity and private local sensitivity. For Model $3$, which uses all $4$ sufficient statistics, we observe that at $\epsilon=1$, private local sensitivity cannot perform useful inference, as the average bias of parameter estimates is over $2$ times the value of the parameters. However, using restricted sensitivity allows for useful parameter estimates, with relative MAEs well under $1$. Additionally, as the number of parameters increases (from Model $1$ to $3$) we can observe that randomized response becomes more competitive with the other approaches. This is due to the fact that randomized response does not require splitting a privacy budget between parameters, so its performance is not strongly affected by the number of parameters in the model. Meanwhile, as noted in Section \ref{sec:rel_work} private local sensitivity grows with a factor of $\frac{1}{\epsilon^2}$ for each statistic so as the privacy budget per-parameter gets smaller, the performance of private bounding of local sensitivity is significantly degraded. In contrast to private local sensitivity, then, our proposed method using restricted sensitivity allows for a larger number of parameters to be utilized in the model, while using small privacy budgets.
@@ -118,12 +142,12 @@ For Models $2$ and $3$, restricted sensitivity outperforms both restricted sensi
  
   \subsubsection{Results}
   
-   \begin{figure}[h]
-  	\caption{Comparison of edge-level differentially private inference methods by KL divergence from non-private inference on Mesa High School Friend Network Data.}
-  	\centering
-  	\includegraphics[width=0.6\textwidth]{figures/inference/KLplot5.png}
-  	\label{fig:kledgepub}
-  \end{figure}
+   %\begin{figure}[h]
+  	%\caption{Comparison of edge-level differentially private inference methods by KL divergence from non-private inference on Mesa High School Friend Network Data.}
+  	%\centering
+  	%\includegraphics[width=0.6\textwidth]{figures/inference/KLplot5.png}
+  	%\label{fig:kledgepub}
+  %\end{figure}
   
   As shown in Figure \ref{fig:kledgepub}, by KL-divergence restricted sensitivity strongly outperforms private local sensitivity, with median KL divergence ten times lower than for private local sensitivity at all $\epsilon$. The parameter estimates from private local sensitivity tend to be wildly off from the non-private estimates as the amount of added noise is larger than the sufficient statistics. This demonstrates one of the major shortcomings of private local sensitivity: it performs poorly for small values of $\delta$ and $\epsilon$, so splitting privacy budget between many sufficient statistics leads to large degradation in utility. Randomized response performs significantly worse than restricted sensitivity in terms of KL-divergence, but has lower variance of KL-divergence. We hypothesize that randomized response is more consistent over many iterations, because the flipping of edges with high probability effectively makes the network resemble a $G(n,p)$ network by removing triangles and two-paths, such that the networks consistently converge to a similar model, while restricted sensitivity perturbs the sufficient statistics so may sometimes lead to more or fewer triangles or $k$-stars in the network. 
   

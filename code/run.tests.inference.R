@@ -81,5 +81,23 @@ if (i==8) {
                                          non.private=TRUE, num.tests=25, parallel=TRUE, attrs=c("Sex"),
                                          burn.in=10000, main.iters=10000, labels.priv=TRUE)
 }
+
+if (i==9) {
+  form.rhs <- formula(~edges + nodematch("Race",  diff=FALSE)
+                      + nodematch("Sex",diff=FALSE) + altkstar(1.0,fixed=TRUE)
+                      + gwesp(1.0,fixed=TRUE))
+  
+  #sigma.epsilon = NULL
+  if (method != 'rr') {
+    dp.epsilon <- c(rep(dp.epsilon/8., 4), rep(dp.epsilon/2., 1))
+    sigma.epsilon = diag(c(0.00005, rep(0.00001, 2), 0.000025, 0.000025))
+  } else {
+    sigma.epsilon = diag(c(0.0005, rep(0.0001, 2), 0.00025, 0.00025))
+  }
+  inference.tests <- run.inference.tests(i, 205, form.rhs,
+                                         dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
+                                         non.private=TRUE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
+                                         burn.in=10000, main.iters=10000)
+}
     
 save(inference.tests, file=sprintf("inference.tests%d%s-eps%g", i, method, sum(dp.epsilon)))

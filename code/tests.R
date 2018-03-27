@@ -530,7 +530,7 @@ load.noise.test.node <- function(tests.id, trunc.only=FALSE) {
   return(df.samples)
 }
 
-plot.noise.node.tests <- function(tests.id, legend.pos='none') {
+plot.noise.node.tests <- function(tests.id, legend.pos='bottom') {
   df.samples <- load.noise.test.node(tests.id, trunc.only=FALSE)
   draw.noise <- function(noise.scale, noise.type) {
     if (noise.type == 'lap') {
@@ -542,13 +542,13 @@ plot.noise.node.tests <- function(tests.id, legend.pos='none') {
   }
   df.quantiles <- df.samples[,list("mean.stat.value"=mean(true.stats),
                                    "mean.scale"=mean(noise.scale),
-                                   "median.err"=median(bias+draw.noise(noise.scale, noise.type)),
-                                   "p25.err"=quantile(bias+draw.noise(noise.scale, noise.type),p=0.25),
-                                   "p75.err"=quantile(bias+draw.noise(noise.scale, noise.type),p=0.75)),
+                                   "median.err"=median(abs(bias)+draw.noise(noise.scale, noise.type)),
+                                   "p25.err"=quantile(abs(bias)+draw.noise(noise.scale, noise.type),p=0.25),
+                                   "p75.err"=quantile(abs(bias)+draw.noise(noise.scale, noise.type),p=0.75)),
                              by=list(n, stat.name, dp.klevel, dp.epsilon, proj.type, noise.type)]
   df.quantiles$stat.name <- sapply(df.quantiles$stat.name, get.statname)
   View(df.quantiles[dp.klevel %in% c('max','conservative') & dp.epsilon==0.5 & noise.type=='cauchy' & proj.type=='trunc',])
-  ggplot(data=df.quantiles[dp.epsilon==0.75 & noise.type=='cauchy' & n>=400,], mapping = aes(x=n, y=median.err/mean.stat.value, color=dp.klevel)) +
+  plt <- ggplot(data=df.quantiles[dp.epsilon==0.75 & noise.type=='cauchy' & n>=400,], mapping = aes(x=n, y=median.err/mean.stat.value, color=dp.klevel)) +
     facet_wrap(stat.name~proj.type, nrow=4, ncol=2, scales = "free_y", labeller = label_wrap_gen(multi_line=FALSE)) +
     geom_line() +
     scale_color_discrete("Degree Cutoff:") +
@@ -556,7 +556,10 @@ plot.noise.node.tests <- function(tests.id, legend.pos='none') {
     theme_grey() +
     theme(axis.text=element_text(size=10), strip.text = element_text(size=8), title = element_text(size=12), legend.position=legend.pos) +
     scale_y_continuous('Relative Median Absolute Error') 
-  ggsave(filename = sprintf("plots/noise.node/noise_node%s.png", sample.map.id(tests.id)), width=10, height=20)
+  plt.legend <- get_legend(plt)
+  plt <- plt + theme(legend.position = 'none')
+  ggsave(filename = sprintf("plots/noise.node/noisenode%s.png", sample.map.id(tests.id)), plot = plt, width=10, height=20)
+  ggsave(filename = "plots/noise.node/legendnode.png", plot = plt.legend, width=4, height=0.25)
 }
 
 ### ALREADY FIXED TRUNC TESTS ###

@@ -260,29 +260,72 @@ trunc.points <- function(df.tests) {
 }
 
 # PLOT BOXPLOTS OF PARAMS
-plot.tests.params <- function(tests.id, legend.position="right") {
+plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.025) {
   df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
   df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
   df.tests$param.est <- df.tests$post.mean.med
   df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
-  df.tests <- trunc.points(trunc.points(trunc.points(df.tests)))
+  df.tests.nonpriv <- trunc.points(trunc.points(trunc.points(df.tests[method!='nonpriv',])))
   df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method, eps)]
-  #df.tests.lims <- df.tests[,list("upper"=(max(param.est),median(param.est)+1.5*IQR(param.est)), "min"=median(param.est)-1.5*IQR(param.est)), by=list(stat.name, method, eps)]
-  #limits=c(df.tests.lims$min, df.tests.lims$max)
-  ggplot(df.tests[method!='nonpriv',], aes(x=method,y=param.est, fill=method)) +
-    #facet_grid(stat.name~eps,  scales='free', labeller = label_bquote(cols= epsilon == .(eps))) +
+  plt.priv <- ggplot(df.tests.nonpriv, aes(x=method,y=param.est, fill=method)) +
     facet_wrap(stat.name~eps, ncol=2, scales='free', labeller = label_bquote(rows = .(stat.name)*",  "*epsilon == .(eps))) +
     geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
-    geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
+    geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black', size=1.25) +
     scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
     scale_fill_discrete("Method:") +
     scale_x_discrete("",breaks=NULL) +
     theme_grey() +
-    theme(strip.text=element_text(size=10, margin=margin(0.01, 0, 0.01, 0, "cm")),
-          axis.text.y=element_text(size=10),
+    theme(strip.text=element_text(size=8, margin=margin(0.01, 0, 0.01, 0, "cm")),
+          axis.text.y=element_text(size=8),
           axis.text.x =element_text(size=0),
-          axis.title.y = element_text(size=10),
-          legend.position=legend.position) 
+          axis.title.y = element_text(size=8),
+          legend.position=legend.position,
+          legend.margin=margin(0,0,0,0, "cm"))
+  plt.legend <- get_legend(plt.priv)
+  plt.priv <- plt.priv + theme(legend.position='none')
+  
+  data_dummylow <- df.tests.true[method == 'nonpriv', list('param.est'=(1-nonpriv.r)*val), by=list(method, stat.name)]
+  data_dummyhigh <- df.tests.true[method == 'nonpriv', list('param.est'=(1+nonpriv.r)*val), by=list(method, stat.name)]
+  plt.nonpriv <- ggplot(df.tests[method=='nonpriv',], aes(x=method,y=param.est)) +
+    facet_wrap(~stat.name, ncol=1, scales='free', labeller = label_bquote(rows = .(stat.name)*",  Non-Private")) +
+    geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
+    geom_hline(data=df.tests.true[method=='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black', size=1.25) +
+    scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
+    geom_blank(data=data_dummylow) +
+    geom_blank(data=data_dummyhigh) +
+    scale_x_discrete("",breaks=NULL) +
+    theme_grey() +
+    theme(strip.text=element_text(size=8, margin=margin(0.01, 0, 0.01, 0, "cm")),
+          axis.text.y=element_text(size=8),
+          axis.text.x =element_text(size=0),
+          axis.title.y = element_text(size=0),
+          plot.margin=margin(5.5,5.5,5.5,-5.5, "pt")) 
+  
+  plts <- plot_grid(plt.priv, plt.nonpriv, rel_widths = c(2, 1))
+  #plts.legend <- plot_grid(plt.legend, plts, nrow=2, rel_heights = c(0.25, length(unique(df.tests.nonpriv$stat.name))))
+  ggsave(filename=sprintf('plots/inference/paramplot%d.png', sample.map.id(tests.id)), plot = plts)
+  ggsave(filename='plots/inference/legend.png', plot = plt.legend, height = 0.25, width = 4)
+}
+
+plot.labeltests.params.nonpriv <- function(tests.id) {
+  df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
+  df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
+  df.tests$param.est <- df.tests$post.mean.med
+  df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
+
+  plt.nonpriv <- ggplot(df.tests[method=='nonpriv',], aes(x=method,y=param.est)) +
+    facet_wrap(~stat.name, ncol=1, scales='free', labeller = label_bquote(rows = .(stat.name)*",  Non-Private")) +
+    geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
+    scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
+    scale_x_discrete("",breaks=NULL) +
+    theme_grey() +
+    theme(strip.text=element_text(size=8, margin=margin(0.01, 0, 0.01, 0, "cm")),
+          axis.text.y=element_text(size=8),
+          axis.text.x =element_text(size=0),
+          axis.title.y = element_text(size=0),
+          plot.margin=margin(5.5,5.5,5.5,-5.5, "pt")) 
+  plt.nonpriv
+  
 }
 
 
