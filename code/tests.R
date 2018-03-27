@@ -378,7 +378,14 @@ run.one.test <- function(t,
   if (!parallel) {
     tic()
   }
-
+  
+  if (method == 'nonpriv') {
+    out <- bergm.orig(formula,
+                      burn.in=burn.in, main.iters = main.iters, aux.iters = 0.2*choose(n,2),
+                      sigma.epsilon = sigma.epsilon,
+                      print.out=2500, nchains = 3)
+    return(out)
+  }
   if (method == "smooth") {
     dp.delta <- 1e-6
     nw.private <- make.private.smooth(formula, dp.epsilon, dp.delta)
