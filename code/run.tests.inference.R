@@ -3,8 +3,8 @@
       eval(parse(text=args[[k]]))
 }
 
-setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
-#setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
+#setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
+setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
 source('libraries.R')
 
 if (i==1) {
@@ -84,19 +84,19 @@ if (i==8) {
 
 if (i==9) {
   form.rhs <- formula(~edges + nodematch("Race",  diff=FALSE)
-                      + nodematch("Sex",diff=FALSE) + altkstar(1.0,fixed=TRUE)
+                      + nodematch("Sex",diff=TRUE)
                       + gwesp(1.0,fixed=TRUE))
   
   #sigma.epsilon = NULL
   if (method != 'rr') {
-    dp.epsilon <- c(rep(dp.epsilon/8., 4), rep(dp.epsilon/2., 1))
-    sigma.epsilon = diag(c(0.00005, rep(0.00001, 2), 0.000025, 0.000025))
+    dp.epsilon <- c(rep(dp.epsilon/6., 3), rep(dp.epsilon/2., 1))
+    sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.000025))
   } else {
-    sigma.epsilon = diag(c(0.0005, rep(0.0001, 2), 0.00025, 0.00025))
+    sigma.epsilon = diag(c(0.0005, rep(0.0001, 3), 0.00025))
   }
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
-                                         non.private=TRUE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
+                                         non.private=FALSE, num.tests=25, parallel=TRUE, attrs=c("Race","Sex"),
                                          burn.in=10000, main.iters=10000)
 }
     
