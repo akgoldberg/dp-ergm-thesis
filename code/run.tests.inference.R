@@ -20,13 +20,13 @@ if (i==2) {
                                             non.private=FALSE, num.tests=25)
 }
 if (i==3) {
-    sigma.epsilon = diag(c(0.00025, 0.0001, 0.000001))
+    sigma.epsilon = diag(c(0.0005, 0.00025, 0.00001))
     inference.tests <- run.inference.tests(i, 300, ~edges+gwesp(0.5, fixed=TRUE)+gwdsp(0.5,fixed=TRUE),
                                             dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                             non.private=FALSE, num.tests=25)
 } 
 if (i==5) {
-    sigma.epsilon = diag(c(0.000025, 0.00005, 0.00005, 0.000001))
+    sigma.epsilon = diag(c(0.0001, 0.00005, 0.00005, 0.000005))
     inference.tests <- run.inference.tests(i, 300, ~edges+altkstar(0.5, fixed=TRUE)+gwesp(0.5, fixed=TRUE)+gwdsp(0.5,fixed=TRUE),
                                             dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                             non.private=FALSE, num.tests=25)
