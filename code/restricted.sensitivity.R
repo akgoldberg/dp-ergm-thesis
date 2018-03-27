@@ -101,6 +101,12 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
       if (proj.type == "trunc") {
         C <- smooth.sens.trunc(proj.aux.info, beta)
       }
+      if (noise.type == "cauchy") {
+        C <- C*sqrt(2)
+      }
+      if (noise.type == "lap") {
+        C <- C*2
+      }
   } else {
     C <- NULL
   }
@@ -147,16 +153,16 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
     if (privacy.type == 'node') {
 
       if (name == 'edges') {
-        noise.level[i] <- 2*C*dp.k/dp.epsilon[t]
+        noise.level[i] <- C*dp.k/dp.epsilon[t]
       }
       if (name == 'altkstar') {
-        noise.level[i] <- 2*C*(3*dp.k*(1./param))/dp.epsilon[t]
+        noise.level[i] <- C*(dp.k*(1./param))/dp.epsilon[t]
       }
       if (name == 'gwesp') {
-        noise.level[i] <- 2*C*((dp.k**2) + ((1./param) - 1))/dp.epsilon[t]
+        noise.level[i] <- C*((dp.k**2) + ((1./param) - 1))/dp.epsilon[t]
       }
       if (name == 'gwdsp') {
-        noise.level[i] <-  2*C*(dp.k**2)
+        noise.level[i] <-  C*(dp.k**2)/dp.epsilon[t]
       }
       # label-dependant terms
       if (name == 'nodematch') {
@@ -170,7 +176,8 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
     i <- i+num.terms
   }
   # draw Laplace noise to use
-  noise.draw <- rlaplace(n = length(noise.level), scale = noise.level)
+  if (noise.type == 'lap')  noise.draw <- rlaplace(n = length(noise.level), scale = noise.level)
+  if (noise.type == 'cauchy') noise.draw <- rcauchy(n = length(noise.level), scale=noise.level)
   return(list("level" = noise.level, "draw" = noise.draw, "C" = C))
 }
 

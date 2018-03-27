@@ -36,7 +36,7 @@ get.summary.inference.tests <- function(model.id, method, dp.epsilon, test.id.st
                    "eps"=numeric(), "delta"=numeric(),
                     "stat.value"=numeric(),  "AR"=numeric(),
                    "post.mean"=numeric(), "post.mean.med"=numeric(), "post.se"=numeric(), "post.sd"=numeric(),
-                   "noise.draw"=numeric(), "noise.level"=character(), "KL"=numeric())
+                   "noise.draw"=numeric(), "noise.level"=character())
   if (is.null(true.theta)) {
     true.theta <- tests$true
   }
@@ -72,7 +72,7 @@ make.inference.testsdf.row <- function(x, true.theta, model.id, test.num) {
   
     # get rid of 0's
     true.theta <- true.theta[true.theta != 0]
-    row$KL <- computeKL(x$formula, true.theta, row$post.mean.med) 
+    #row$KL <- computeKL(x$formula, true.theta, row$post.mean.med) 
     
     # non-private test inference run
     if (test.num == 0) {
@@ -242,3 +242,38 @@ view.ARs <- function(tests.id) {
   df.AR <- df.tests[stat.name == 'edges', list("min"=min(AR), "25p"=quantile(AR, .25),"median"=median(AR), "75p"=quantile(AR, .75), "max"=max(AR), "mean"=mean(AR)), by=list(method, eps)]
   View(df.AR)
 }
+
+trunc.points <- function(df.tests) {
+  df.param.min <- df.tests[,list('param.est'=min(param.est)), by=list(method,eps,stat.name)]
+  df.param.max <- df.tests[,list('param.est'=max(param.est)), by=list(method,eps,stat.name)]
+  df.tests <- df.tests[!df.param.min, on=list(method, eps, stat.name, param.est)]
+  df.tests <- df.tests[!df.param.max, on=list(method, eps, stat.name, param.est)]
+  return(df.tests)
+}
+
+# PLOT BOXPLOTS OF PARAMS
+plot.tests.params <- function(tests.id, legend.position="right") {
+  df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
+  df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
+  df.tests$param.est <- df.tests$post.mean
+  df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
+  df.tests <- trunc.points(trunc.points(trunc.points(df.tests)))
+  df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method, eps)]
+  ggplot(df.tests, aes(x=method,y=param.est, fill=method)) +
+    #facet_grid(stat.name~eps,  scales='free', labeller = label_bquote(cols= epsilon == .(eps))) +
+    facet_wrap(stat.name~eps, ncol=2, scales='free', labeller = label_bquote(rows = .(stat.name)*",  "*epsilon == .(eps))) +
+    geom_boxplot(outlier.alpha=0., alpha=0.8) +
+    geom_hline(data=df.tests.true, aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
+    scale_y_continuous("Posterior Estimate", breaks=pretty_breaks(n=8)) +
+    scale_fill_discrete("Method:") +
+    scale_x_discrete("",breaks=NULL) +
+    theme_grey() +
+    theme(strip.text=element_text(size=10, margin=margin(0.01, 0, 0.01, 0, "cm")),
+          #strip.background =element_rect(size=1),
+          axis.text.y=element_text(size=10),
+          axis.text.x =element_text(size=0),
+          axis.title.y = element_text(size=10),
+          legend.position=legend.position) 
+}
+
+

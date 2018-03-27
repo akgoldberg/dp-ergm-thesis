@@ -493,3 +493,59 @@ run.sample.noise.test.node <- function(sample, dp.epsilons, dp.delta) {
     }
     return(df)
 }
+
+load.noise.test.node <- function(tests.id, trunc.only=FALSE) {
+  if (trunc.only){
+    add = "_node_trunc"
+  }
+  else {
+    add = "_node"
+  }
+  df.samples <- data.table(read.table(file=sprintf("obj/df/df.samples%d%s.txt",tests.id,add), sep = ",", header=TRUE))
+  return(df.samples)
+}
+
+plot.noise.tests <- function(tests.id, legend.pos='none') {
+  df.samples <- load.noise.test.node(tests.id, trunc.only=FALSE)
+  draw.noise <- function(noise.scale, noise.type) {
+    if (noise.type == 'lap') {
+      return(abs(rlaplace(n=1000, scale=noise.scale)))
+    }
+    if (noise.type == 'cauchy') {
+      return(abs(rcauchy(n=1000, scale=noise.scale)))
+    }
+  }
+  df.quantiles <- df.samples[,list("mean.stat.value"=mean(true.stats),
+                                   "mean.scale"=mean(noise.scale),
+                                   "median.err"=median(bias+draw.noise(noise.scale, noise.type)),
+                                   "p25.err"=quantile(bias+draw.noise(noise.scale, noise.type),p=0.25),
+                                   "p75.err"=quantile(bias+draw.noise(noise.scale, noise.type),p=0.75)),
+                             by=list(n, stat.name, dp.klevel, dp.epsilon, proj.type, noise.type)]
+  df.quantiles$stat.name <- sapply(df.quantiles$stat.name, get.statname)
+  View(df.quantiles[dp.klevel == 'max' & dp.epsilon==0.5 & noise.type=='cauchy' & proj.type=='trunc',])
+  ggplot(data=df.quantiles[dp.epsilon==0.5 & noise.type=='cauchy' & n>=400,], mapping = aes(x=n, y=median.err/mean.stat.value, color=dp.klevel)) +
+    facet_wrap(stat.name~proj.type, nrow=4, ncol=2, scales = "free", labeller = label_wrap_gen(multi_line=FALSE)) +
+    geom_line() +
+    scale_color_discrete("Degree Cutoff:") +
+    scale_x_continuous('n') +
+    theme(axis.text=element_text(size=10), strip.text = element_text(size=8), title = element_text(size=12), legend.position=legend.pos) +
+    scale_y_continuous('Relative Median Absolute Error') 
+}
+
+### ALREADY FIXED TRUNC TESTS ###
+fix.noise.node.tests <- function(tests.id, trunc.only) {
+  if (trunc.only){ add = "_node_trunc"}
+  else { add = "_node" }
+  fname <- sprintf("obj/df/df.samples%d%s.txt",tests.id,add)
+  df.samples <- data.table(read.table(file=fname, sep = ",", header=TRUE))
+  # fix factor of 3 in alt-k-star
+  df.samples[stat.name == 'altkstar.0.5','noise.scale'] <- df.samples[stat.name == 'altkstar.0.5', noise.scale/3.]
+  # fix lack of eps in alt k-two-path
+  df.samples[stat.name == 'gwdsp.fixed.0.5','noise.scale'] <- df.samples[stat.name == 'gwdsp.fixed.0.5',noise.scale/dp.epsilon]
+  # fix factors in front of smooth sens
+  df.samples[noise.type == 'lap', 'smooth.sens'] <- df.samples[noise.type == 'lap', 2*smooth.sens]
+  df.samples[noise.type == 'lap', 'noise.scale'] <- df.samples[noise.type == 'lap', 2*noise.scale]
+  df.samples[noise.type == 'cauchy', 'smooth.sens'] <- df.samples[noise.type == 'cauchy', sqrt(2)*smooth.sens]
+  df.samples[noise.type == 'cauchy', 'noise.scale'] <- df.samples[noise.type == 'cauchy', sqrt(2)*noise.scale]
+  write.table(df.samples, file = fname, sep = ",", col.names = colnames(df.samples))
+}
