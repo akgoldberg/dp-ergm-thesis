@@ -17,12 +17,12 @@ make.private.restr <- function (formula, dp.epsilon, dp.k, privacy.type="edge",
     # edge projection
     if (privacy.type=="edge") y <- projection.edge(y.orig, dp.k)
     # node projection
-    if (privacy.type=="node" & proj.type =='LP') {
+    if (privacy.type=="node" && proj.type =='LP') {
       out <- projection.node.LP(y.orig, dp.k)
       y <- out$y
       proj.aux.info <- out$d.hat
     }
-    if (privacy.type=="node" & proj.type =='trunc') {
+    if (privacy.type=="node" && proj.type =='trunc') {
       out <- projection.node.trunc(y.orig, dp.k)
       y <- out$y
       proj.aux.info <- out$Cs
