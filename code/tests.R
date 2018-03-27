@@ -305,7 +305,7 @@ visualize.noise.tests <- function(tests.id,
 
 run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.tests = 10,
                                burn.in=10000, main.iters=10000, sigma.epsilon=NULL, parallel=TRUE, non.private=TRUE,
-                               method='restr', labels.priv=FALSE, attrs=NULL) {
+                               method='restr', labels.priv=FALSE, attrs=NULL, sigma.prior=NULL) {
   
   if (samp.id <= 5) {
     samples <- load.samples(samp.id, start=n, stop=n)[[1]]
@@ -329,7 +329,7 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
     nonprivate.out <- bergm.orig(formula,
                         burn.in=burn.in, main.iters = main.iters, aux.iters = 0.1*choose(n,2),
                         sigma.epsilon = sigma.epsilon,
-                        print.out=2500, nchains = 3)
+                        print.out=2500, nchains = 3, sigma.prior = sigma.prior)
     
   } else {
     nonprivate.out <- NULL
@@ -338,7 +338,7 @@ run.inference.tests <- function(samp.id, n, formula.rhs, dp.epsilon = 1.0, num.t
   # setup up closure for parallel processing
   test.run <- function(t) {
     run.one.test(t, formula, n, dp.epsilon, dp.k, burn.in, main.iters, 
-                  sigma.epsilon, parallel, method, labels.priv, attrs)
+                  sigma.epsilon, parallel, method, labels.priv, attrs, sigma.prior=sigma.prior)
   }
   
   if (parallel) {
@@ -371,7 +371,8 @@ run.one.test <- function(t,
                          labels.priv,
                          attrs,
                          print.out = 1000,
-                         nchains = 3
+                         nchains = 3,
+                         sigma.prior = NULL
                          ) {
   
   print(sprintf("Test: %d", t))
@@ -382,7 +383,7 @@ run.one.test <- function(t,
   if (method == 'nonpriv') {
     out <- bergm.orig(formula,
                       burn.in=burn.in, main.iters = main.iters, aux.iters = 0.4*choose(n,2),
-                      sigma.epsilon = sigma.epsilon,
+                      sigma.epsilon = sigma.epsilon, sigma.prior = sigma.prior,
                       print.out=2500, nchains = 3)
     return(out)
   }
@@ -399,7 +400,7 @@ run.one.test <- function(t,
   
   private.out <- bergm.modified.private(nw.private$formula, nw.private$noise,
                                         burn.in=burn.in, main.iters = main.iters, aux.iters = 0.4*choose(n,2),
-                                        sigma.epsilon = sigma.epsilon,
+                                        sigma.epsilon = sigma.epsilon, sigma.prior=sigma.prior,
                                         print.out=print.out, nchains = 3)
   
   if (!parallel) toc()
