@@ -255,7 +255,7 @@ trunc.points <- function(df.tests) {
 plot.tests.params <- function(tests.id, legend.position="right") {
   df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
   df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
-  df.tests$param.est <- df.tests$post.mean
+  df.tests$param.est <- df.tests$post.mean.med
   df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
   df.tests <- trunc.points(trunc.points(trunc.points(df.tests)))
   df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method, eps)]

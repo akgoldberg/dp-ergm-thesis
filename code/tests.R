@@ -381,7 +381,7 @@ run.one.test <- function(t,
   
   if (method == 'nonpriv') {
     out <- bergm.orig(formula,
-                      burn.in=burn.in, main.iters = main.iters, aux.iters = 0.2*choose(n,2),
+                      burn.in=burn.in, main.iters = main.iters, aux.iters = 0.4*choose(n,2),
                       sigma.epsilon = sigma.epsilon,
                       print.out=2500, nchains = 3)
     return(out)
@@ -398,7 +398,7 @@ run.one.test <- function(t,
   }
   
   private.out <- bergm.modified.private(nw.private$formula, nw.private$noise,
-                                        burn.in=burn.in, main.iters = main.iters, aux.iters = 0.2*choose(n,2),
+                                        burn.in=burn.in, main.iters = main.iters, aux.iters = 0.4*choose(n,2),
                                         sigma.epsilon = sigma.epsilon,
                                         print.out=print.out, nchains = 3)
   
