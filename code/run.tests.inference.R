@@ -3,8 +3,8 @@
       eval(parse(text=args[[k]]))
 }
 
-#setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
-setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
+setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
+#setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
 source('libraries.R')
 
 if (i==1) {
@@ -131,7 +131,7 @@ if (i==11) {
   }
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
-                                         non.private=FALSE, num.tests=25, labels.priv = TRUE, parallel=FALSE, attrs=c("Race"),
+                                         non.private=FALSE, num.tests=25, labels.priv = TRUE, parallel=TRUE, attrs=c("Race"),
                                          burn.in=10000, main.iters=10000)
 }
     
