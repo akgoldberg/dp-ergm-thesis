@@ -530,7 +530,7 @@ load.noise.test.node <- function(tests.id, trunc.only=FALSE) {
   return(df.samples)
 }
 
-plot.noise.node.tests <- function(tests.id, legend.pos='bottom') {
+visualize.noise.node.tests <- function(tests.id, legend.pos='bottom') {
   df.samples <- load.noise.test.node(tests.id, trunc.only=FALSE)
   draw.noise <- function(noise.scale, noise.type) {
     if (noise.type == 'lap') {
@@ -550,15 +550,16 @@ plot.noise.node.tests <- function(tests.id, legend.pos='bottom') {
   View(df.quantiles[dp.klevel %in% c('max','conservative') & dp.epsilon==0.5 & noise.type=='cauchy' & proj.type=='trunc',])
   plt <- ggplot(data=df.quantiles[dp.epsilon==0.75 & noise.type=='cauchy' & n>=400,], mapping = aes(x=n, y=median.err/mean.stat.value, color=dp.klevel)) +
     facet_wrap(stat.name~proj.type, nrow=4, ncol=2, scales = "free_y", labeller = label_wrap_gen(multi_line=FALSE)) +
-    geom_line() +
+    geom_line(size=1.2) +
+    geom_point(size=2.4) +
     scale_color_discrete("Degree Cutoff:") +
     scale_x_continuous('n', breaks=seq(400,1000,100)) +
     theme_grey() +
-    theme(axis.text=element_text(size=10), strip.text = element_text(size=8), title = element_text(size=12), legend.position=legend.pos) +
+    theme(axis.text=element_text(size=18), axis.title=element_text(size=18), axis.text.y=element_text(size=16), strip.text = element_text(size=20), legend.position=legend.pos) +
     scale_y_continuous('Relative Median Absolute Error') 
   plt.legend <- get_legend(plt)
   plt <- plt + theme(legend.position = 'none')
-  ggsave(filename = sprintf("plots/noise.node/noisenode%s.png", sample.map.id(tests.id)), plot = plt, width=10, height=20)
+  ggsave(filename = sprintf("plots/noise.node/noisenode%s.png", sample.map.id(tests.id)), plot = plt, width=17.5, height=20)
   ggsave(filename = "plots/noise.node/legendnode.png", plot = plt.legend, width=4, height=0.25)
 }
 

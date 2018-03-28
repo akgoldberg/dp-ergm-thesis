@@ -124,10 +124,10 @@ if (i==11) {
   
   #sigma.epsilon = NULL
   if (method != 'rr') {
-    dp.epsilon <- c(dp.epsilon/13., rep(4*dp.epsilon/13., 3))
-    sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.000025))
+    dp.epsilon <- c(dp.epsilon/11., rep(5*dp.epsilon/11., 2))
+    sigma.epsilon = diag(c(0.00005, 0.00001, 0.000025))
   } else {
-    sigma.epsilon = diag(c(0.0005, rep(0.0001, 3), 0.00025))
+    sigma.epsilon = diag(c(0.0005, 0.0001, 3, 0.00025))
   }
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,

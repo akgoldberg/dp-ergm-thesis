@@ -75,7 +75,7 @@ Then, we evaluate how difference in perturbation of the network data impacts qua
 
  \subsubsection{Results}
  \begin{figure}[hp]
- 	\caption{Comparison of Relative RMSE of differentially private sufficient statistics computed with privacy level of $\eps = 0.25$-per statistic.} %Laplace noise is scaled to private bound of local sensitivity or restricted sensitivity with $3$ different settings of degree cutoff $k$ for the restricted sensitivity.}
+ 	\caption{Comparison of Relative RMSE of edge-DP sufficient statistics released at a privacy level of $\eps = 0.25$-per statistic. Laplace noise is scaled to either a private bound on local sensitivity or to restricted sensitivity with $3$ settings of degree cutoff $k$.}
  	\label{fig:edge_noise}
  	\centering
  	\input{figures/noise_tests_edge.tex}
@@ -167,7 +167,11 @@ For Models $2$ and $3$, restricted sensitivity outperforms both restricted sensi
  
  \section{Node-Adjacency Model}
  
-\begin{figure}
-	content...
+\begin{figure}[h]
+\caption{Comparison of Relative Median Absolute Error of node-DP sufficient statistics released at a privacy level of $\eps = 0.5$-per statistic for networks from \emph{Model $\mathit{1}$}. Cauchy noise is scaled to the restricted sensitivity times a $\beta$-smooth bound on the local sensitivity of projection. Projection using an LP is shown on the left and using node truncation is shown on the right}
+\centering
+\includegraphics[width=0.5\linewidth]{noise/legendnode.png}\\\vspace{0.2in}
+
+\includegraphics[width=1.0\linewidth]{noise/noisenode1.png}
 \end{figure}
  

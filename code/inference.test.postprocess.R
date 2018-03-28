@@ -316,6 +316,10 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
   #ggsave(filename='plots/inference/legend.png', plot = plt.legend, height = 0.25, width = 4)
 }
 
+# get.table.params <- function(tests.id) {
+  
+# }
+
 plot.labeltests.params.nonpriv <- function(tests.id) {
   df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
   df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
