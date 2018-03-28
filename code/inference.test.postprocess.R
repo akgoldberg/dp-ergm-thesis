@@ -16,7 +16,7 @@ make.inference.df <- function(model.id, methods=c("nonpriv", "smooth", "restr", 
   for (method in methods) {
     for (dp.epsilon in dp.epsilons) {
       print(sprintf("Method: %s, Epsilon: %d", method, dp.epsilon))
-      fname <- sprintf("obj/inference.tests/inference.tests%d%s-eps%g", model.id, method, dp.epsilon)
+      fname <- sprintf("obj/inference.tests.new/inference.tests%d%s-eps%g", model.id, method, dp.epsilon)
       if (file.exists(fname) | (method == 'nonpriv' && dp.epsilon==1)) {
         df.out <- rbindlist(list(df.out, get.summary.inference.tests(model.id, method, dp.epsilon, test.id.start, true.theta)),
                             use.names=TRUE, fill=TRUE)
@@ -264,13 +264,20 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
   df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
   df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
   df.tests$param.est <- df.tests$post.mean.med
-  df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
-  df.tests.nonpriv <- trunc.points(trunc.points(trunc.points(df.tests[method!='nonpriv',])))
-  df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method, eps)]
+  df.tests$method = revalue(df.tests$method, c('restr' = 'restricted')) #'smooth' = 'private local', 
+  df.tests <- trunc.points(df.tests)
+  df.tests.nonpriv <- trunc.points(trunc.points(df.tests[method!='nonpriv',]))
+  if (tests.id < 6) {
+    df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method, eps)]
+  }
+  else {
+    df.tests.true <- df.tests[method=="nonpriv", list("val"=mean(post.mean)), by=list(stat.name)]
+    df.tests.true <- merge(df.tests, df.tests.true, by='stat.name', all=TRUE)
+  } 
   plt.priv <- ggplot(df.tests.nonpriv, aes(x=method,y=param.est, fill=method)) +
     facet_wrap(stat.name~eps, ncol=2, scales='free', labeller = label_bquote(rows = .(stat.name)*",  "*epsilon == .(eps))) +
     geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
-    geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black', size=1.25) +
+    geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
     scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
     scale_fill_discrete("Method:") +
     scale_x_discrete("",breaks=NULL) +
@@ -289,7 +296,7 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
   plt.nonpriv <- ggplot(df.tests[method=='nonpriv',], aes(x=method,y=param.est)) +
     facet_wrap(~stat.name, ncol=1, scales='free', labeller = label_bquote(rows = .(stat.name)*",  Non-Private")) +
     geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
-    geom_hline(data=df.tests.true[method=='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black', size=1.25) +
+    geom_hline(data=df.tests.true[method=='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
     scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
     geom_blank(data=data_dummylow) +
     geom_blank(data=data_dummyhigh) +
@@ -302,13 +309,14 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
           plot.margin=margin(5.5,5.5,5.5,-5.5, "pt")) 
   
   plts <- plot_grid(plt.priv, plt.nonpriv, rel_widths = c(2, 1))
+  plts
   #plts.legend <- plot_grid(plt.legend, plts, nrow=2, rel_heights = c(0.25, length(unique(df.tests.nonpriv$stat.name))))
-  ggsave(filename=sprintf('plots/inference/paramplot%d.png', sample.map.id(tests.id)), plot = plts)
-  ggsave(filename='plots/inference/legend.png', plot = plt.legend, height = 0.25, width = 4)
+  #ggsave(filename=sprintf('plots/inference/paramplot%d.png', sample.map.id(tests.id)), plot = plts)
+  #ggsave(filename='plots/inference/legend.png', plot = plt.legend, height = 0.25, width = 4)
 }
 
 plot.labeltests.params.nonpriv <- function(tests.id) {
-  #df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
+  df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
   df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
   df.tests$param.est <- df.tests$post.mean.med
   df.tests$method = revalue(df.tests$method, c('smooth' = 'private local', 'restr' = 'restricted'))
