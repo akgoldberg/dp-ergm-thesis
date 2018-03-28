@@ -426,7 +426,7 @@ load.inference.tests.new <- function(i, method, dp.epsilon) {
     load(fname)
     return(inference.tests)
   } else {
-    if (method == 'restr') {
+    if (method == 'restr' | i >= 9) {
       folder <- 'inference.tests.new'
     } else {
       folder <- 'inference.tests'

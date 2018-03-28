@@ -277,7 +277,7 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
   plt.priv <- ggplot(df.tests.nonpriv, aes(x=method,y=param.est, fill=method)) +
     facet_wrap(stat.name~eps, ncol=2, scales='free', labeller = label_bquote(rows = .(stat.name)*",  "*epsilon == .(eps))) +
     geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
-    geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
+    geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=2,color='black', size=1.1) +
     scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
     scale_fill_discrete("Method:") +
     scale_x_discrete("",breaks=NULL) +
@@ -296,7 +296,7 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
   plt.nonpriv <- ggplot(df.tests[method=='nonpriv',], aes(x=method,y=param.est)) +
     facet_wrap(~stat.name, ncol=1, scales='free', labeller = label_bquote(rows = .(stat.name)*",  Non-Private")) +
     geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
-    geom_hline(data=df.tests.true[method=='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=3,color='black') +
+    geom_hline(data=df.tests.true[method=='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=2,color='black', size=1.1) +
     scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
     geom_blank(data=data_dummylow) +
     geom_blank(data=data_dummyhigh) +
@@ -310,6 +310,7 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
   
   plts <- plot_grid(plt.priv, plt.nonpriv, rel_widths = c(2, 1))
   plts
+  #plts
   #plts.legend <- plot_grid(plt.legend, plts, nrow=2, rel_heights = c(0.25, length(unique(df.tests.nonpriv$stat.name))))
   #ggsave(filename=sprintf('plots/inference/paramplot%d.png', sample.map.id(tests.id)), plot = plts)
   #ggsave(filename='plots/inference/legend.png', plot = plt.legend, height = 0.25, width = 4)

@@ -54,7 +54,7 @@ get.statname <- function(ergm.name) {
     return(sprintf('P-%s', tail(str_split(ergm.name, "[.]")[[1]],1)))
   }
   if (str_count(ergm.name, 'nodematch') == 1) {
-    return(sprintf('H-%s', tail(str_split(ergm.name, "[.]")[[1]],1)))
+    return(sprintf('Homophily-%s', tail(str_split(ergm.name, "[.]")[[1]],1)))
   }
 }
 

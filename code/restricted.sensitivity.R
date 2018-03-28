@@ -339,11 +339,11 @@ private.labels <- function(nw, eps, attrs=NULL) {
   attrs <- colnames(label.df)
   n <- dim(label.df)[1]
   # generate histogram of labels
-  label.df <- data.frame(table(label.df))
-  colnames(label.df) <- c("attr", "Freq")
+  label.df <- data.table(table(label.df))
+  #colnames(label.df) <- c("attr", "Freq")
   
   # add noise
-  noisyFreq <- sapply(label.df$Freq + rlaplace(n=dim(label.df)[1], scale=1./eps), max, 0)
+  noisyFreq <- sapply(label.df$N + rlaplace(n=dim(label.df)[1], scale=1./eps), max, 0)
   postproc <-round(noisyFreq)
   label.df <- cbind(label.df, noisyFreq, postproc)
   sort.order <- order(abs(label.df$noisyFreq - label.df$postproc), decreasing=TRUE)
@@ -365,8 +365,9 @@ private.labels <- function(nw, eps, attrs=NULL) {
   # make nw
   nw.out <- copy(nw)
   #delete.vertex.attribute(nw.out, list.vertex.attributes(nw.out))
+  label.df <- data.frame(label.df)
   for (attr in attrs) {
-    set.vertex.attribute(nw.out, attr, as.vector(rep(label.df$attr, label.df$postproc)))
+    set.vertex.attribute(nw.out, attr, rep(label.df[attr][[1]], as.vector(label.df$postproc)))
   }
   return(nw.out)
 }

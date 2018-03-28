@@ -107,7 +107,7 @@ if (i==10) {
   
   #sigma.epsilon = NULL
   if (method != 'rr') {
-    dp.epsilon <- c(rep(dp.epsilon/6., 3), rep(dp.epsilon/2., 1))
+    dp.epsilon <- c(dp.epsilon/13., rep(4*dp.epsilon/13., 3))
     sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.000025))
   } else {
     sigma.epsilon = diag(c(0.0005, rep(0.0001, 3), 0.00025))
@@ -115,6 +115,23 @@ if (i==10) {
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
                                          non.private=FALSE, num.tests=25, labels.priv = TRUE, parallel=TRUE, attrs=c("Race","Sex"),
+                                         burn.in=10000, main.iters=10000)
+}
+
+if (i==11) {
+  form.rhs <- formula(~edges + nodematch("Race",  diff=FALSE)
+                      + gwesp(1.0,fixed=TRUE))
+  
+  #sigma.epsilon = NULL
+  if (method != 'rr') {
+    dp.epsilon <- c(dp.epsilon/13., rep(4*dp.epsilon/13., 3))
+    sigma.epsilon = diag(c(0.00005, rep(0.00001, 3), 0.000025))
+  } else {
+    sigma.epsilon = diag(c(0.0005, rep(0.0001, 3), 0.00025))
+  }
+  inference.tests <- run.inference.tests(i, 205, form.rhs,
+                                         dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
+                                         non.private=FALSE, num.tests=25, labels.priv = TRUE, parallel=TRUE, attrs=c("Race"),
                                          burn.in=10000, main.iters=10000)
 }
     
