@@ -141,7 +141,7 @@ A benefit of randomized response is that it can be employed while collecting dat
 \label{thm:rr_gen} Consider dataset $x \in \mathcal{D} = \mathcal{U}^n$ and an algorithm which with probability $p$ for each row, replaces the row with an entry drawn uniformly at random from $\mathcal{U}$. Then, this algorithm is $\epsilon$-differentially private, taking $p \geq \frac{|\mathcal{U}| - 1}{e^{\eps} + |\mathcal{U}| - 1 }$.
 \end{theorem}
 
-\section{Edge-Level vs. Node-Level Adjacency}
+\subsection{Edge-Level vs. Node-Level Adjacency}
 
 We now turn to the question of how to define ``adjacency'' for graphs, as opposed to tabular data. We will define graphs abstractly in terms of vertex sets and edge sets, rather than as adjacency matrices in this section, as it makes the definitions easier to specify and more intuitive. There are two reasonable and widely used definitions of adjacency, which provide privacy at very different granularities and thus may be appropriate in different circumstances: 
 

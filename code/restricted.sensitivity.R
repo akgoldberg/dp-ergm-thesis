@@ -340,6 +340,10 @@ private.labels <- function(nw, eps, attrs=NULL) {
   n <- dim(label.df)[1]
   # generate histogram of labels
   label.df <- data.table(table(label.df))
+  if ('label.df' %in% colnames(label.df)) {
+    set(label.df, j=attrs[[1]], value=label.df$label.df)
+    label.df$label.df <- NULL
+  }
   #colnames(label.df) <- c("attr", "Freq")
   
   # add noise

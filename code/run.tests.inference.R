@@ -3,8 +3,8 @@
       eval(parse(text=args[[k]]))
 }
 
-setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
-#setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
+#setwd("/n/home06/akgoldberg/dp-ergm-thesis/code")
+setwd("/Users/alexandergoldberg/Documents/Harvard/Senior Year/Thesis/project/code")
 source('libraries.R')
 
 if (i==1) {
@@ -125,13 +125,13 @@ if (i==11) {
   #sigma.epsilon = NULL
   if (method != 'rr') {
     dp.epsilon <- c(dp.epsilon/11., rep(5*dp.epsilon/11., 2))
-    sigma.epsilon = diag(c(0.00005, 0.00001, 0.000025))
+    sigma.epsilon <- diag(c(0.00005, 0.00001, 0.000025))
   } else {
-    sigma.epsilon = diag(c(0.0005, 0.0001, 3, 0.00025))
+    sigma.epsilon <- diag(c(0.0005, 0.0001, 0.00025))
   }
   inference.tests <- run.inference.tests(i, 205, form.rhs,
                                          dp.epsilon, method=method, sigma.epsilon=sigma.epsilon,
-                                         non.private=FALSE, num.tests=25, labels.priv = TRUE, parallel=TRUE, attrs=c("Race"),
+                                         non.private=FALSE, num.tests=25, labels.priv = TRUE, parallel=FALSE, attrs=c("Race"),
                                          burn.in=10000, main.iters=10000)
 }
     
