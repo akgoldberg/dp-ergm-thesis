@@ -49,5 +49,5 @@ The basic exchange algorithm for Bayesian inference over ERGMs can be easily mod
 	\end{align*}
 \end{algorithm}
 
-The MH acceptance ratio reamins the same as in the single-site update, because the proposal distribution is still symmetric -- making the reverse jump from $\theta_h^*$ to $\theta_h^{(t-1)}$ simply requires reversing $\epsilon$ and the order of $h_1$ and $h_2$. The tuning parameter $\gamma$ controls the amount of interaction between chains and is generally taken to be in the range $0.5$ and $1$ (in this case we take $\gamma = 0.5$ throughout.) Additionally, the number of chains to use can be tuned in inference, but we choose to use $3$ chains throughout as this seems to lead to fast convergence.
+The MH acceptance ratio remains the same as in the single-site update, because the proposal distribution is still symmetric -- making the reverse jump from $\theta_h^*$ to $\theta_h^{(t-1)}$ simply requires reversing $\epsilon$ and the order of $h_1$ and $h_2$. The tuning parameter $\gamma$ controls the amount of interaction between chains and is generally taken to be in the range $0.5$ and $1$ (in this case we take $\gamma = 0.5$ throughout.) Additionally, the number of chains to use can be tuned in inference, but we choose to use $3$ chains throughout as this seems to lead to fast convergence.
 

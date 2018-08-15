@@ -97,7 +97,7 @@ draw.lap.noise.smooth.term <- function(term, param, dp.epsilon, dp.delta, max.sp
     if (term == 'gwesp') {
         ls.x <- 1./param + 2*max.sp
         gs.ls <- 2
-        noise.level <- max(1e-6,(ls.x + rlaplace(n=1,s=gs.ls/dp.epsilon) + a*gs.ls)/dp.epsilon)
+        noise.level <- max(1e-6,ls.x + rlaplace(n=1,s=gs.ls/dp.epsilon) + (a*gs.ls)/dp.epsilon)
     }
     if (term == 'gwdsp') {
         ls.x <- 2*max.deg

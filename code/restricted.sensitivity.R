@@ -159,10 +159,10 @@ draw.lap.noise.restricted <- function(terms, dp.epsilonTot,
         noise.level[i] <- C*(dp.k*(1./param))/dp.epsilon[t]
       }
       if (name == 'gwesp') {
-        noise.level[i] <- C*((dp.k**2) + ((1./param) - 1))/dp.epsilon[t]
+        noise.level[i] <- C*(0.5*(dp.k**2) + dp.k*((1./param) - 0.5))/dp.epsilon[t]
       }
       if (name == 'gwdsp') {
-        noise.level[i] <-  C*(dp.k**2)/dp.epsilon[t]
+        noise.level[i] <-  C*(0.5*(dp.k**2) + 0.5*dp.k)/dp.epsilon[t]
       }
       # label-dependant terms
       if (name == 'nodematch') {

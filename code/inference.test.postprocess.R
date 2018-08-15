@@ -260,13 +260,13 @@ trunc.points <- function(df.tests) {
 }
 
 # PLOT BOXPLOTS OF PARAMS
-plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.025) {
-  df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
+plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.025, dp.eps=c(1,3)) {
+  df.tests <- data.table(load.df.inference.tests(tests.id))
   df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
   df.tests$param.est <- df.tests$post.mean.med
   df.tests$method = revalue(df.tests$method, c('restr' = 'restricted')) #'smooth' = 'private local', 
-  df.tests <- trunc.points(df.tests)
-  df.tests.nonpriv <- trunc.points(trunc.points(df.tests[method!='nonpriv',]))
+  df.tests <- trunc.points(df.tests[eps %in% dp.eps | method=='nonpriv',])
+  df.tests.nonpriv <- trunc.points(trunc.points(df.tests[method != 'nonpriv',]))
   if (tests.id < 6) {
     df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method, eps)]
   }
@@ -275,7 +275,7 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
     df.tests.true <- merge(df.tests, df.tests.true, by='stat.name', all=TRUE)
   } 
   plt.priv <- ggplot(df.tests.nonpriv, aes(x=method,y=param.est, fill=method)) +
-    facet_wrap(stat.name~eps, ncol=2, scales='free', labeller = label_bquote(rows = .(stat.name)*",  "*epsilon == .(eps))) +
+    facet_wrap(stat.name~eps, ncol=length(dp.eps), scales='free', labeller = label_bquote(rows = .(stat.name)*",  "*epsilon == .(eps))) +
     geom_boxplot(outlier.alpha=0.5, alpha=0.8) +
     geom_hline(data=df.tests.true[method!='nonpriv',], aes(yintercept = val), alpha=0.8, linetype=2,color='black', size=1.1) +
     scale_y_continuous("Parameter Estimate", breaks=pretty_breaks(n=8)) +
@@ -310,15 +310,74 @@ plot.tests.params <- function(tests.id, legend.position="bottom", nonpriv.r = 0.
   
   plts <- plot_grid(plt.priv, plt.nonpriv, rel_widths = c(2, 1))
   plts
-  #plts
+  plts
   #plts.legend <- plot_grid(plt.legend, plts, nrow=2, rel_heights = c(0.25, length(unique(df.tests.nonpriv$stat.name))))
   #ggsave(filename=sprintf('plots/inference/paramplot%d.png', sample.map.id(tests.id)), plot = plts)
   #ggsave(filename='plots/inference/legend.png', plot = plt.legend, height = 0.25, width = 4)
 }
 
-# get.table.params <- function(tests.id) {
+get.table.params <- function(tests.id, my.methods = c('nonpriv 0', 'restr 1', 'restr 2')) {
+  df.tests <- data.table(load.df.inference.tests(tests.id))
+  df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
+  df.tests$param.est <- df.tests$post.mean.med
+  df.tests$method <- paste(df.tests$method, df.tests$eps)
+  df.tests <- trunc.points(df.tests[method %in% my.methods,])
+  df.tests.nonpriv <- trunc.points(trunc.points(df.tests[method == 'nonpriv 0',]))
+  df.tests[, eps:=NULL]
+  df.tests.nonpriv[, eps:=NULL]
+  if (tests.id < 6) {
+    df.tests.true <- df.tests[,list("val"=mean(true.param.value)), by=list(stat.name, method)]
+  }
+  else {
+    df.tests.true <- df.tests[method=="nonpriv 0", list("val"=mean(post.mean)), by=list(stat.name)]
+    df.tests.true <- merge(df.tests, df.tests.true, by='stat.name', all=TRUE)
+  } 
+  df.summary <- df.tests.true[, list('avg.param'=mean(param.est), 'mse'=mean((param.est-val)**2), 'mae'=mean(abs(param.est-val))),
+                                by=list(stat.name, method)]
   
-# }
+  View(df.summary)
+  get.df <- function (my.method) {
+    if (my.method == 'nonpriv 0') {
+      return(df.summary[method == my.method,-c('method','stat.name','mae', 'mse'),with=FALSE])
+    } else {
+      return(df.summary[method == my.method,-c('method','stat.name'),with=FALSE])
+    }
+  }
+  
+  df.out <- cbind.data.frame(unique(df.summary$stat.name),lapply(my.methods,get.df))
+  View(df.out)
+  print(xtable(df.out), include.rownames=FALSE)
+}
+
+get.table.med <- function(tests.id, my.methods = c('nonpriv 0', 'restr 1', 'restr 2')) {
+  df.tests <- data.table(load.df.inference.tests(tests.id))
+  df.tests$stat.name <- sapply(df.tests$stat.name, get.statname)
+  df.tests$param.est <- df.tests$post.mean.med
+  df.tests$method <- paste(df.tests$method, df.tests$eps)
+  #df.tests <- trunc.points(df.tests[method %in% my.methods,])
+  df.tests.nonpriv <- df.tests[method == 'nonpriv 0',]
+  df.tests[, eps:=NULL]
+  df.tests.nonpriv[, eps:=NULL]
+  
+  df.tests.true <- df.tests[method=="nonpriv 0", list("val"=mean(param.est), "val.sd"=mean(post.sd)), by=list(stat.name)]
+  df.tests.true <- merge(df.tests, df.tests.true, by='stat.name', all=TRUE)
+  df.tests.true$err <- df.tests.true[, abs(val - param.est)/val]
+  df.totalerrs <- df.tests.true[, list('totalerr'=sum(err)), by=list(test.num, method)]
+  df.mederrs <- df.totalerrs[, list('totalerr'=min(totalerr)), by=list(method)]
+  df.totalerrs <- df.totalerrs[df.mederrs, on=c('totalerr')]
+  
+  df.tests.true <- df.tests.true[df.totalerrs, on=c('test.num')]
+  View(df.tests.true)
+
+  get.df <- function (my.method) {
+    return(df.tests.true[method==my.method,c('param.est', 'post.sd'), with=FALSE])
+  }
+  
+  df.out <- cbind.data.frame(unique(df.tests.true$stat.name),lapply(my.methods,get.df))
+  View(df.out)
+  print(xtable(df.out), include.rownames=FALSE)
+}
+
 
 plot.labeltests.params.nonpriv <- function(tests.id) {
   df.tests <- data.table(load.df.inference.tests(tests.id))[method != 'nonprivate',]
@@ -338,7 +397,6 @@ plot.labeltests.params.nonpriv <- function(tests.id) {
           axis.title.y = element_text(size=0),
           plot.margin=margin(5.5,5.5,5.5,-5.5, "pt")) 
   plt.nonpriv
-  
 }
 
 

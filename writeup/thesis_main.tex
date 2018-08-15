@@ -7,12 +7,12 @@
 
 % Title page
 \title{
-	\textbf{Towards Differentially Private Inference on Network Data} \\[1.5em]
+	Towards Differentially Private Inference on\\ Network Data \\[1.5em]
 	}
 \author{ 
 				A thesis presented  \\[0.1em]
 				by\\[1.25em]
-				\Large{Alexander Koujianos Goldberg} \\[1.25em]
+				Alexander Koujianos Goldberg \\[1.25em]
 				To\\[0.1em]
 				Applied Mathematics\\[0.1em]
 				in partial fulfillment of the honors requirement\\[0.1em]
@@ -32,7 +32,7 @@
 	% 												Abstract				   										    %
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	\begin{abstract}
-		This is my abstract.
+		Statistical analysis of network data, while popular in a broad range of fields, can also be highly problematic from a privacy standpoint. In this thesis, we study privacy-preserving inference on network data using the rigorous notion of differential privacy. We propose new methods for differentially private inference using a common class of models known as Exponential Random Graph Models (ERGMs). The goal of our work is to accurately estimate the parameters of an ERGM applied to a network dataset, while offering meaningful privacy guarantees to participants. We propose methods that provably guarantee differential privacy at two different granularities: edge-level privacy, which protects the privacy of any single relationship in the network and node-level privacy, which protects all of the relationships of a participant. Specifically, using the framework of ``restricted sensitivity,'' we take advantage of the sparsity of real-world networks to perturb data much less than prior work while guaranteeing differential privacy. We empirically evaluate the accuracy of inference in a series of experiments on both synthetic networks and a real network dataset. Experimental results suggest that our proposed methods enable accurate inference under meaningful privacy guarantees in settings where current methods do not, moving us closer to the goal of useful differentially private statistical modeling of network data. %In particular, we enable researchers to reach valid conclusions about network structure using edge-level differentially private inference for stronger levels of privacy than previous work. Further, we provide evidence that our node-level differentially privacy inference method is promising.
 	\end{abstract}
 
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,7 +40,9 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	\renewcommand\abstractname{Acknowledgements}
 	\begin{abstract}
-		Thanks everyone!
+		First and foremost, I would like to thank my advisor Salil Vadhan. Without his feedback and encouragement, this thesis would not have been possible. I also thank Boaz Barak for generously serving as second reader of my thesis. I am grateful to Cynthia Dwork who introduced me to differential privacy research in her seminar CS 227r, ``Topics In Cryptography and Privacy.'' It is due to her boundless enthusiasm for the subject that I first came to be interested in this rich area of research.
+		
+		Additionally, I am indebted to my parents for their constant support of me in all of my academic endeavors and for the exceptional example they set in pursuing quantitative research. I thank my twin sister Lydia for four great years of studying math and computer science together and for writing her thesis alongside me. Lastly, I thank all of my friends for their support throughout my work on this thesis and for listening to my seemingly endless musings on differential privacy over many meals.
 	\end{abstract}
 	
 	\tableofcontents
@@ -94,7 +96,7 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% 													Conclusion											         %
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	\chapter{Conclusion}\label{conclusion}
+	\chapter{Conclusions}\label{conclusion}
 	
 	\input{chapters/conclusion}
 	
